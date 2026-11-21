@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # SasthoBazar (স্বাস্থ্যবাজার)
 
 Multi-vendor healthcare e-commerce + business management system.
@@ -73,3 +74,7 @@ actions) and the sidebar. After adding a module there, click **Roles & Permissio
 * Security review and hardening notes: [`docs/SECURITY-REVIEW.md`](docs/SECURITY-REVIEW.md)
 * Scheduled tasks: `php cron/cron.php` every 5 minutes (`--list` shows the tasks, `--task=backup` runs one now)
 
+=======
+# sasthobazar
+It is software with e-commerce
+>>>>>>> a0a2bdbb54befefc616942dde610a704e53c7928
