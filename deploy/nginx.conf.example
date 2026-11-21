@@ -1,0 +1,80 @@
+# SasthoBazar - Nginx + PHP-FPM site (Ubuntu). Copy to /etc/nginx/sites-available/sasthobazar,
+# replace example.com and the paths, then: ln -s ../sites-available/sasthobazar /etc/nginx/sites-enabled/
+# nginx -t && systemctl reload nginx.   Certbot (--nginx) adds the SSL lines and the HTTP->HTTPS redirect.
+#
+# The project root is the web root; Nginx does what the .htaccess files do on Apache.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name example.com www.example.com;
+
+    root /var/www/sasthobazar;
+    index index.php;
+    charset utf-8;
+    client_max_body_size 20m;          # product images, prescriptions, CSV import, backup restore
+    server_tokens off;
+
+    # ---- never served: code, config, data, logs, backups, cron, docs, dot-files ----
+    location ~ ^/(config|core|app|database|storage|cron|docs|deploy)(/|$) { return 404; }
+    location ~ /\.(?!well-known/) { return 404; }
+    location ~* \.(sql|gz|zip|tar|bak|old|orig|swp|lock|log|md|ini|env|yml|yaml|sh|dist)$ { return 404; }
+    location ~ ^/(index\.html|admin\.html|db\.js)$ { return 404; }
+
+    # The installer must be deleted after installation. Until then it is blocked here as well.
+    location ^~ /install { return 404; }
+
+    # ---- uploads: static files only, never PHP ----
+    location ^~ /uploads/ {
+        alias /var/www/sasthobazar/public/uploads/;
+        location ~* \.(php\d?|phtml|phar|pl|py|cgi|sh|html?|js)$ { return 404; }
+        location ~* \.svg$ {
+            add_header Content-Security-Policy "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox" always;
+            add_header X-Content-Type-Options nosniff always;
+        }
+        add_header X-Content-Type-Options nosniff always;
+        expires 30d;
+        access_log off;
+    }
+
+    # ---- static assets ----
+    location ^~ /assets/ {
+        alias /var/www/sasthobazar/public/assets/;
+        expires 30d;
+        access_log off;
+    }
+    location = /robots.txt { alias /var/www/sasthobazar/public/robots.txt; access_log off; }
+
+    # ---- admin panel and vendor panel: own front controllers ----
+    location ^~ /admin {
+        try_files $uri /admin/index.php$is_args$args;
+        location ~ \.php$ {
+            include snippets/fastcgi-php.conf;
+            fastcgi_param SCRIPT_FILENAME $document_root/admin/index.php;
+            fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        }
+    }
+    location ^~ /vendor-panel {
+        try_files $uri /vendor-panel/index.php$is_args$args;
+        location ~ \.php$ {
+            include snippets/fastcgi-php.conf;
+            fastcgi_param SCRIPT_FILENAME $document_root/vendor-panel/index.php;
+            fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        }
+    }
+
+    # ---- storefront: real files in public/, everything else -> public/index.php ----
+    location / {
+        try_files /public$uri /public/index.php$is_args$args;
+    }
+    location = /public/index.php {
+        include snippets/fastcgi-php.conf;
+        fastcgi_param SCRIPT_FILENAME $document_root/public/index.php;
+        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+    }
+    # any other .php file anywhere: refuse
+    location ~ \.php$ { return 404; }
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml text/plain;
+}

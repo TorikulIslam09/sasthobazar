@@ -1,0 +1,48 @@
+# SasthoBazar - root rules (Apache 2.4 with mod_rewrite + AllowOverride All)
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+ServerSignature Off
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # --- Production: force HTTPS (uncomment once the SSL certificate works) ---
+    # RewriteCond %{HTTPS} !=on
+    # RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # --- Production: one host name (uncomment and set your domain) ---
+    # RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    # RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+    # robots.txt lives in public/
+    RewriteRule ^robots\.txt$ public/robots.txt [L]
+
+    # Private folders: code, config (database password), migrations, logs, backups, cron, docs, server examples
+    RewriteRule ^(config|core|app|database|storage|cron|docs|deploy)(/|$) - [F,L]
+    # Hidden files (.git, .env, .htaccess ...), except Let's Encrypt checks
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+    # Source / data files that must never be downloaded
+    RewriteRule \.(sql|gz|zip|tar|bak|old|orig|swp|lock|log|md|txt|ini|env|yml|yaml|json|sh|dist)$ - [F,L,NC]
+    # Old static prototypes in the root (index.html, admin.html, db.js) are not part of the live site
+    RewriteRule ^(index\.html|admin\.html|db\.js)$ - [F,L,NC]
+
+    # Admin, vendor panel, installer and /public handle themselves
+    RewriteRule ^(admin|vendor-panel|install|public)(/.*)?$ - [L]
+
+    # Everything else -> public/ (storefront + assets)
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Fallback when mod_rewrite is off: still deny the sensitive files
+<FilesMatch "\.(sql|gz|lock|log|md|ini|env|bak|sh)$">
+    Require all denied
+</FilesMatch>
+
+# Same headers for static files; PHP pages already send them (setifempty = no duplicates)
+<IfModule mod_headers.c>
+    Header setifempty X-Content-Type-Options "nosniff"
+    Header setifempty X-Frame-Options "SAMEORIGIN"
+    Header setifempty Referrer-Policy "strict-origin-when-cross-origin"
+    Header unset X-Powered-By
+</IfModule>

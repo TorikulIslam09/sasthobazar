@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /vendor-panel/
+Disallow: /install/
+Disallow: /account/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /api/
+Disallow: /webhooks/
+Disallow: /*?*sort=

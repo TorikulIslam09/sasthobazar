@@ -1,0 +1,37 @@
+# Uploaded files: pictures only. Never run scripts, never list folders.
+Options -Indexes -ExecCGI -Includes
+
+# Turn PHP off here, whatever the file is called (mod_php / PHP-FPM handlers)
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+RemoveHandler .php .php3 .php4 .php5 .php7 .php8 .phtml .phar .pl .py .cgi .sh .asp .aspx .jsp
+RemoveType .php .php3 .php4 .php5 .php7 .php8 .phtml .phar
+
+# Anything that is not an image / PDF is refused (also catches "photo.php.jpg"-style tricks)
+<FilesMatch "\.(php\d?|phtml|phar|pl|py|cgi|sh|asp|aspx|jsp|htaccess|htpasswd|html?|js|shtml|svgz)$|\.php\.">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    # SVG files (demo banners) may not run scripts even when opened directly
+    <FilesMatch "\.svg$">
+        Header always set Content-Security-Policy "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/webp "access plus 30 days"
+    ExpiresByType image/gif "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+</IfModule>

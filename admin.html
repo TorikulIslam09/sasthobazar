@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>অ্যাডমিন প্যানেল — স্বাস্থ্যবাজার</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--brand:#0e7673;--brand-dark:#0a5a58;--brand-light:#e7f4f3;--accent:#f0663a;--bg:#f3f6f6;--text:#1f2a2a;--muted:#6b7a7a;--line:#e1e8e8;--ok:#16a34a;--warn:#f59e0b;--err:#dc2626}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hind Siliguri',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit}
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+aside{background:#0b2928;color:#c5d8d7;position:sticky;top:0;height:100vh;overflow:auto;padding:16px 10px}
+aside .brand{display:flex;align-items:center;gap:8px;color:#fff;font-weight:700;font-size:18px;padding:4px 8px 16px}
+aside .brand span{width:34px;height:34px;border-radius:9px;background:var(--brand);display:grid;place-items:center}
+aside .grp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6f9391;padding:12px 10px 4px}
+aside a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:14px;margin-bottom:1px}
+aside a:hover{background:#123d3b;color:#fff}
+aside a.on{background:var(--brand);color:#fff;font-weight:600}
+aside a .n{margin-left:auto;background:var(--accent);color:#fff;border-radius:999px;font-size:11px;padding:0 7px;font-weight:700}
+.top{background:#fff;border-bottom:1px solid var(--line);padding:12px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:20}
+.top h1{font-size:20px;flex:1}
+.content{padding:22px 24px}
+.btn{display:inline-flex;align-items:center;gap:6px;background:var(--brand);color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--brand-dark)}
+.btn.sm{padding:4px 10px;font-size:13px}
+.btn.out{background:#fff;color:var(--brand);border:1.5px solid var(--brand)}
+.btn.out:hover{background:var(--brand-light)}
+.btn.red{background:#fff;color:var(--err);border:1.5px solid #f3c4c4}
+.btn.red:hover{background:#fdecec}
+.btn.gray{background:#eef2f2;color:var(--text)}
+.panel{background:#fff;border-radius:12px;border:1px solid var(--line);padding:18px;margin-bottom:18px}
+.panel h3{font-size:16px;margin-bottom:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;gap:12px;align-items:center}
+.stat .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:var(--brand-light)}
+.stat b{font-size:22px;display:block;line-height:1.2}
+.stat span{color:var(--muted);font-size:13px}
+.two{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar input,.toolbar select{border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff}
+.toolbar input{min-width:220px}
+.spacer{flex:1}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:14px}
+th{background:#f7faf9;font-weight:600;color:var(--muted);font-size:13px;position:sticky;top:0}
+tr:hover td{background:#fafcfc}
+.tbl{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+.thumb{width:42px;height:42px;border-radius:8px;background:var(--bg);display:grid;place-items:center;font-size:22px;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap}
+.sw{position:relative;width:38px;height:22px;display:inline-block}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;background:#cdd6d6;border-radius:22px;cursor:pointer;transition:.2s}
+.sw span::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.sw input:checked+span{background:var(--brand)}
+.sw input:checked+span::before{transform:translateX(16px)}
+.st-sel{border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-size:13px}
+.actions{display:flex;gap:6px;justify-content:flex-end}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 14px;cursor:pointer;font-size:14px}
+.tabs button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:30px 16px;overflow:auto}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:720px;padding:22px}
+.modal h3{margin-bottom:16px;font-size:19px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+.form .full{grid-column:1/-1}
+label.f{display:block;margin-bottom:10px;font-size:13px;font-weight:600;color:#3a4646}
+label.f input:not([type=checkbox]):not([type=radio]),label.f select,label.f textarea{display:block;width:100%;margin-top:4px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-weight:400;outline:none;background:#fff}
+label.f input:focus,label.f select:focus,label.f textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-light)}
+label.f input[type=color]{height:40px;padding:3px}
+.chk{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;font-weight:400}
+.chk label{display:flex;gap:5px;align-items:center}
+.imgprev{display:flex;gap:10px;align-items:center;margin-top:6px}
+.imgprev .thumb{width:64px;height:64px}
+.mfoot{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 20px;border-radius:10px;transform:translateY(120px);transition:.3s;z-index:300}
+.toast.show{transform:none}
+.bars{display:flex;align-items:flex-end;gap:6px;height:200px;padding-top:10px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:11px;color:var(--muted)}
+.bars i{display:block;width:100%;background:var(--brand);border-radius:5px 5px 0 0;min-height:2px;position:relative}
+.bars i:hover{background:var(--brand-dark)}
+.bars i:hover::after{content:attr(data-v);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:2px 6px;border-radius:4px;white-space:nowrap;font-style:normal;font-size:11px;margin-bottom:4px}
+.list-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;gap:10px}
+.list-row:last-child{border:0}
+.login{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,var(--brand),var(--brand-dark))}
+.login form{background:#fff;padding:30px;border-radius:16px;width:360px;max-width:92vw}
+.oitems td{padding:6px 8px}
+.hist{font-size:13px;color:var(--muted)}
+.menu-btn{display:none;background:none;border:0;font-size:24px;cursor:pointer}
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  aside{position:fixed;left:-260px;width:240px;z-index:50;transition:.25s}
+  aside.open{left:0;box-shadow:0 0 40px rgba(0,0,0,.3)}
+  .menu-btn{display:block}.two,.form{grid-template-columns:1fr}.content{padding:16px}
+  .toolbar input{min-width:0;flex:1}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="modal-bg" id="modal"><div class="modal" id="mbody"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="db.js"></script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const S=()=>DB.data.settings;
+const money=n=>'৳'+Math.round(+n||0).toLocaleString('en-IN');
+const dt=t=>t?new Date(t).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2000)}
+function openModal(h){$('#mbody').innerHTML=h;$('#modal').classList.add('open')}
+function closeModal(){$('#modal').classList.remove('open')}
+$('#modal').addEventListener('mousedown',e=>{if(e.target.id==='modal')closeModal()});
+
+/* ===== auth ===== */
+const authed=()=>sessionStorage.getItem('sb_admin')==='1';
+function loginView(){
+  $('#root').innerHTML=`<div class="login"><form id="lf"><div style="text-align:center;margin-bottom:18px"><div style="font-size:40px">🔐</div><h2>অ্যাডমিন লগইন</h2><p style="color:var(--muted);font-size:14px">${esc(S().siteName)} ম্যানেজমেন্ট প্যানেল</p></div>
+  <label class="f">পাসওয়ার্ড<input type="password" name="p" autofocus required></label><button class="btn" style="width:100%;justify-content:center;padding:11px">লগইন</button>
+  <p style="color:var(--muted);font-size:12px;margin-top:12px;text-align:center">ডিফল্ট পাসওয়ার্ড: admin123 (সেটিংস থেকে বদলে নিন)</p></form></div>`;
+  $('#lf').onsubmit=e=>{e.preventDefault();if(e.target.p.value===S().adminPass){sessionStorage.setItem('sb_admin','1');boot()}else toast('পাসওয়ার্ড ভুল')};
+}
+
+/* ===== shared option helpers ===== */
+const catOpts=()=>DB.all('categories').map(c=>[c.id,c.icon+' '+c.name]);
+const secOpts=()=>DB.all('sections').map(s=>[s.id,s.title]);
+const TOGGLE={k:'active',l:'চালু',toggle:1};
+const BOOK_ST={new:['নতুন','#f59e0b'],confirmed:['কনফার্মড','#3b82f6'],done:['সম্পন্ন','#16a34a'],cancelled:['বাতিল','#dc2626']};
+const RX_ST={new:['নতুন','#f59e0b'],reviewed:['যাচাই হয়েছে','#3b82f6'],done:['অর্ডার তৈরি','#16a34a'],cancelled:['বাতিল','#dc2626']};
+const MSG_ST={new:['নতুন','#f59e0b'],done:['উত্তর দেওয়া হয়েছে','#16a34a']};
+const thumbCol=(emoji)=>({k:'img',l:'',r:x=>`<div class="thumb">${x.img?`<img src="${esc(x.img)}">`:esc(x.icon||emoji)}</div>`});
+
+/* ===== entity schemas (generic CRUD) ===== */
+const E={
+  products:{title:'পণ্য',icon:'💊',search:['name','brand'],
+    filters:[{k:'cat',l:'সব ক্যাটাগরি',opts:catOpts},{k:'_stock',l:'সব স্টক',opts:()=>[['low','কম স্টক (≤১০)'],['out','স্টক শেষ']],fn:(x,v)=>v==='low'?x.stock<=10:x.stock<=0}],
+    cols:[thumbCol('📦'),{k:'name',l:'নাম',r:x=>`<b>${esc(x.name)}</b><br><small style="color:var(--muted)">${esc(x.brand)} · ${esc(x.unit)} ${x.rx?'· <span style="color:var(--err)">Rx</span>':''}</small>`},
+      {k:'cat',l:'ক্যাটাগরি',r:x=>esc((DB.get('categories',x.cat)||{}).name||'—')},
+      {k:'price',l:'দাম',r:x=>`<b>${money(x.price)}</b>${x.mrp>x.price?`<br><s style="color:var(--muted);font-size:12px">${money(x.mrp)}</s>`:''}`},
+      {k:'stock',l:'স্টক',r:x=>`<span style="color:${x.stock<=0?'var(--err)':x.stock<=10?'var(--warn)':'inherit'};font-weight:600">${x.stock}</span>`},TOGGLE],
+    fields:[{k:'name',l:'পণ্যের নাম',req:1,full:1},{k:'brand',l:'ব্র্যান্ড/কোম্পানি'},{k:'unit',l:'ইউনিট (যেমন: ১০ ট্যাবলেট)'},
+      {k:'cat',l:'ক্যাটাগরি',t:'select',opts:catOpts,req:1},{k:'icon',l:'ইমোজি আইকন (ছবি না থাকলে)'},
+      {k:'mrp',l:'MRP (৳)',t:'number',req:1},{k:'price',l:'বিক্রয় মূল্য (৳)',t:'number',req:1},{k:'stock',l:'স্টক',t:'number',req:1},
+      {k:'rating',l:'রেটিং (০-৫)',t:'number',step:'0.1'},{k:'reviews',l:'রিভিউ সংখ্যা',t:'number'},
+      {k:'img',l:'ছবি',t:'image',full:1},{k:'sections',l:'হোমপেজ সেকশনে দেখাবে',t:'multi',opts:secOpts,full:1},
+      {k:'desc',l:'বিবরণ',t:'textarea',full:1},{k:'rx',l:'প্রেসক্রিপশন প্রয়োজন (Rx)',t:'check'},{k:'active',l:'সাইটে দেখাবে',t:'check'}],
+    defaults:{icon:'💊',active:true,sections:[],rating:4.5,reviews:0,rx:false,unit:'১ পিস',brand:''}},
+  categories:{title:'ক্যাটাগরি',icon:'🗂️',search:['name','id'],sort:(a,b)=>a.order-b.order,
+    cols:[{k:'icon',l:'',r:x=>`<div class="thumb">${esc(x.icon)}</div>`},{k:'name',l:'নাম',r:x=>`<b>${esc(x.name)}</b><br><small style="color:var(--muted)">${esc(x.id)}</small>`},
+      {k:'_c',l:'পণ্য',r:x=>DB.all('products').filter(p=>p.cat===x.id).length},{k:'order',l:'ক্রম'},TOGGLE],
+    fields:[{k:'id',l:'আইডি (ইংরেজিতে, যেমন: vitamins)',req:1,createOnly:1,pattern:'[a-z0-9-]+'},{k:'name',l:'নাম',req:1},{k:'icon',l:'ইমোজি আইকন'},{k:'order',l:'ক্রম',t:'number'},{k:'active',l:'চালু',t:'check'}],
+    defaults:{icon:'📦',order:99,active:true},
+    beforeDelete:x=>DB.all('products').some(p=>p.cat===x.id)?'এই ক্যাটাগরিতে পণ্য আছে। আগে পণ্যগুলো অন্য ক্যাটাগরিতে সরান।':''},
+  sections:{title:'হোমপেজ সেকশন',icon:'🧩',sort:(a,b)=>a.order-b.order,
+    cols:[{k:'title',l:'শিরোনাম',r:x=>`<b>${esc(x.title)}</b><br><small style="color:var(--muted)">${esc(x.id)}</small>`},{k:'_c',l:'পণ্য',r:x=>DB.all('products').filter(p=>(p.sections||[]).includes(x.id)).length},{k:'order',l:'ক্রম'},TOGGLE],
+    fields:[{k:'id',l:'আইডি (ইংরেজিতে)',req:1,createOnly:1,pattern:'[a-z0-9-]+'},{k:'title',l:'শিরোনাম',req:1},{k:'order',l:'ক্রম',t:'number'},{k:'active',l:'চালু',t:'check'}],
+    defaults:{order:99,active:true},note:'কোন পণ্য কোন সেকশনে দেখাবে তা পণ্য এডিট করার সময় বাছাই করুন।'},
+  banners:{title:'ব্যানার / স্লাইডার',icon:'🖼️',sort:(a,b)=>a.order-b.order,
+    cols:[{k:'p',l:'প্রিভিউ',r:x=>`<div style="width:160px;height:56px;border-radius:8px;background:${x.img?`url('${esc(x.img)}') center/cover`:`linear-gradient(120deg,${esc(x.color1)},${esc(x.color2)})`};color:#fff;font-size:12px;padding:6px;overflow:hidden"><b>${esc(x.title)}</b></div>`},
+      {k:'title',l:'শিরোনাম'},{k:'link',l:'লিংক'},{k:'order',l:'ক্রম'},TOGGLE],
+    fields:[{k:'title',l:'শিরোনাম',req:1,full:1},{k:'sub',l:'সাব-টাইটেল',full:1},{k:'btn',l:'বাটনের লেখা'},{k:'link',l:'বাটনের লিংক (যেমন: #/shop?cat=skincare)'},
+      {k:'color1',l:'রং ১',t:'color'},{k:'color2',l:'রং ২',t:'color'},{k:'img',l:'ব্যাকগ্রাউন্ড ছবি (ঐচ্ছিক, ১২০০×৩০০)',t:'image',max:1400,full:1},{k:'order',l:'ক্রম',t:'number'},{k:'active',l:'চালু',t:'check'}],
+    defaults:{color1:'#0e7673',color2:'#21a39e',order:9,active:true,link:'#/shop'}},
+  customers:{title:'কাস্টমার',icon:'👥',search:['name','phone'],
+    cols:[{k:'name',l:'নাম',r:x=>`<b>${esc(x.name)}</b>`},{k:'phone',l:'মোবাইল'},{k:'address',l:'ঠিকানা',r:x=>`<small>${esc(x.address||'')}</small>`},
+      {k:'_o',l:'অর্ডার',r:x=>DB.all('orders').filter(o=>o.phone===x.phone).length},
+      {k:'_s',l:'মোট কেনাকাটা',r:x=>money(DB.all('orders').filter(o=>o.phone===x.phone&&o.status!=='cancelled').reduce((s,o)=>s+o.total,0))},
+      {k:'createdAt',l:'যোগদান',r:x=>dt(x.createdAt)}],
+    fields:[{k:'name',l:'নাম',req:1},{k:'phone',l:'মোবাইল',req:1},{k:'address',l:'ঠিকানা',t:'textarea',full:1},{k:'pass',l:'পাসওয়ার্ড (সাইটে লগইনের জন্য)'}],
+    defaults:{}},
+  prescriptions:{title:'প্রেসক্রিপশন',icon:'📄',search:['name','phone'],noAdd:1,
+    cols:[{k:'img',l:'ছবি',r:x=>`<a href="#" data-view-img="${x.id}"><div class="thumb" style="width:56px;height:56px"><img src="${esc(x.img)}"></div></a>`},
+      {k:'name',l:'কাস্টমার',r:x=>`<b>${esc(x.name)}</b><br>${esc(x.phone)}`},{k:'address',l:'ঠিকানা',r:x=>`<small>${esc(x.address)}</small>`},{k:'note',l:'নোট'},{k:'createdAt',l:'সময়',r:x=>dt(x.createdAt)},{k:'status',l:'স্ট্যাটাস',status:RX_ST}],
+    fields:[{k:'name',l:'নাম'},{k:'phone',l:'মোবাইল'},{k:'address',l:'ঠিকানা',t:'textarea',full:1},{k:'note',l:'নোট',full:1},{k:'status',l:'স্ট্যাটাস',t:'select',opts:()=>Object.entries(RX_ST).map(([k,v])=>[k,v[0]])}]},
+  labTests:{title:'ল্যাব টেস্ট',icon:'🧪',search:['name'],
+    cols:[{k:'name',l:'টেস্ট',r:x=>`<b>${esc(x.name)}</b><br><small style="color:var(--muted)">${esc(x.desc)}</small>`},{k:'price',l:'দাম',r:x=>money(x.price)},{k:'report',l:'রিপোর্ট'},TOGGLE],
+    fields:[{k:'name',l:'টেস্টের নাম',req:1,full:1},{k:'desc',l:'বিবরণ',full:1},{k:'mrp',l:'MRP',t:'number'},{k:'price',l:'দাম',t:'number',req:1},{k:'report',l:'রিপোর্ট সময়'},{k:'active',l:'চালু',t:'check'}],
+    defaults:{active:true,report:'২৪ ঘণ্টা'}},
+  labBookings:{title:'ল্যাব বুকিং',icon:'📅',search:['name','phone','testName'],noAdd:1,
+    cols:[{k:'testName',l:'টেস্ট',r:x=>`<b>${esc(x.testName)}</b><br>${money(x.price)}`},{k:'name',l:'কাস্টমার',r:x=>`${esc(x.name)}<br>${esc(x.phone)}`},{k:'address',l:'ঠিকানা',r:x=>`<small>${esc(x.address)}</small>`},{k:'date',l:'তারিখ'},{k:'status',l:'স্ট্যাটাস',status:BOOK_ST}],
+    fields:[{k:'name',l:'নাম'},{k:'phone',l:'মোবাইল'},{k:'date',l:'তারিখ',t:'date'},{k:'status',l:'স্ট্যাটাস',t:'select',opts:()=>Object.entries(BOOK_ST).map(([k,v])=>[k,v[0]])},{k:'address',l:'ঠিকানা',t:'textarea',full:1}]},
+  doctors:{title:'ডাক্তার',icon:'👨‍⚕️',search:['name','spec'],
+    cols:[{k:'img',l:'',r:x=>`<div class="thumb" style="border-radius:50%">${x.img?`<img src="${esc(x.img)}">`:'👨‍⚕️'}</div>`},{k:'name',l:'নাম',r:x=>`<b>${esc(x.name)}</b><br><small>${esc(x.spec)}</small>`},{k:'degree',l:'ডিগ্রি'},{k:'fee',l:'ফি',r:x=>money(x.fee)},TOGGLE],
+    fields:[{k:'name',l:'নাম',req:1},{k:'spec',l:'বিশেষজ্ঞ',req:1},{k:'degree',l:'ডিগ্রি'},{k:'exp',l:'অভিজ্ঞতা (বছর)',t:'number'},{k:'fee',l:'ফি (৳)',t:'number',req:1},{k:'days',l:'দিন'},{k:'time',l:'সময়'},{k:'img',l:'ছবি',t:'image',max:400},{k:'active',l:'চালু',t:'check'}],
+    defaults:{active:true,days:'শনি–বৃহস্পতি',time:'সন্ধ্যা ৬টা–রাত ৯টা'}},
+  appointments:{title:'অ্যাপয়েন্টমেন্ট',icon:'🗓️',search:['name','phone','doctorName'],noAdd:1,
+    cols:[{k:'doctorName',l:'ডাক্তার',r:x=>`<b>${esc(x.doctorName)}</b><br>${money(x.fee)}`},{k:'name',l:'রোগী',r:x=>`${esc(x.name)}<br>${esc(x.phone)}`},{k:'problem',l:'সমস্যা',r:x=>`<small>${esc(x.problem)}</small>`},{k:'date',l:'তারিখ'},{k:'status',l:'স্ট্যাটাস',status:BOOK_ST}],
+    fields:[{k:'name',l:'নাম'},{k:'phone',l:'মোবাইল'},{k:'date',l:'তারিখ',t:'date'},{k:'status',l:'স্ট্যাটাস',t:'select',opts:()=>Object.entries(BOOK_ST).map(([k,v])=>[k,v[0]])},{k:'problem',l:'সমস্যা',t:'textarea',full:1}]},
+  posts:{title:'ব্লগ পোস্ট',icon:'📝',search:['title'],sort:(a,b)=>b.createdAt-a.createdAt,
+    cols:[thumbCol('📝'),{k:'title',l:'শিরোনাম',r:x=>`<b>${esc(x.title)}</b><br><small style="color:var(--muted)">${esc(x.excerpt)}</small>`},{k:'createdAt',l:'তারিখ',r:x=>dt(x.createdAt)},TOGGLE],
+    fields:[{k:'title',l:'শিরোনাম',req:1,full:1},{k:'excerpt',l:'সংক্ষিপ্ত বিবরণ',full:1},{k:'icon',l:'ইমোজি'},{k:'img',l:'কভার ছবি',t:'image',max:1200},{k:'body',l:'লেখা (প্যারাগ্রাফের মাঝে ফাঁকা লাইন দিন)',t:'textarea',rows:10,full:1},{k:'active',l:'প্রকাশিত',t:'check'}],
+    defaults:{icon:'📝',active:true}},
+  coupons:{title:'কুপন',icon:'🎟️',search:['code'],
+    cols:[{k:'code',l:'কোড',r:x=>`<b style="font-family:monospace;font-size:15px">${esc(x.code)}</b>`},{k:'value',l:'ছাড়',r:x=>x.type==='percent'?x.value+'%':money(x.value)},{k:'min',l:'ন্যূনতম কেনাকাটা',r:x=>money(x.min)},
+      {k:'_u',l:'ব্যবহার',r:x=>DB.all('orders').filter(o=>o.coupon===x.code).length},TOGGLE],
+    fields:[{k:'code',l:'কোড (ইংরেজি বড় হাতের)',req:1},{k:'type',l:'ধরন',t:'select',opts:()=>[['percent','শতাংশ (%)'],['flat','নির্দিষ্ট টাকা (৳)']]},{k:'value',l:'পরিমাণ',t:'number',req:1},{k:'min',l:'ন্যূনতম কেনাকাটা (৳)',t:'number'},{k:'active',l:'চালু',t:'check'}],
+    defaults:{type:'percent',min:0,active:true},beforeSave:o=>{o.code=String(o.code).toUpperCase().replace(/\s/g,'')}},
+  faqs:{title:'FAQ',icon:'❓',sort:(a,b)=>a.order-b.order,
+    cols:[{k:'q',l:'প্রশ্ন',r:x=>`<b>${esc(x.q)}</b><br><small style="color:var(--muted)">${esc(x.a)}</small>`},{k:'order',l:'ক্রম'},TOGGLE],
+    fields:[{k:'q',l:'প্রশ্ন',req:1,full:1},{k:'a',l:'উত্তর',t:'textarea',req:1,full:1},{k:'order',l:'ক্রম',t:'number'},{k:'active',l:'চালু',t:'check'}],defaults:{order:99,active:true}},
+  pages:{title:'পেজ',icon:'📃',
+    cols:[{k:'title',l:'শিরোনাম',r:x=>`<b>${esc(x.title)}</b>`},{k:'id',l:'লিংক',r:x=>`<a href="index.html#/page/${esc(x.id)}" target="_blank" style="color:var(--brand)">#/page/${esc(x.id)}</a>`}],
+    fields:[{k:'id',l:'আইডি (ইংরেজিতে)',req:1,createOnly:1,pattern:'[a-z0-9-]+'},{k:'title',l:'শিরোনাম',req:1},{k:'body',l:'লেখা',t:'textarea',rows:12,full:1}],defaults:{}},
+  messages:{title:'মেসেজ',icon:'✉️',search:['name','phone','message'],noAdd:1,
+    cols:[{k:'name',l:'প্রেরক',r:x=>`<b>${esc(x.name)}</b><br>${esc(x.phone)}`},{k:'subject',l:'বিষয়'},{k:'message',l:'মেসেজ',r:x=>`<small>${esc(x.message)}</small>`},{k:'createdAt',l:'সময়',r:x=>dt(x.createdAt)},{k:'status',l:'স্ট্যাটাস',status:MSG_ST}],
+    fields:[{k:'name',l:'নাম'},{k:'phone',l:'মোবাইল'},{k:'subject',l:'বিষয়',full:1},{k:'message',l:'মেসেজ',t:'textarea',full:1},{k:'status',l:'স্ট্যাটাস',t:'select',opts:()=>Object.entries(MSG_ST).map(([k,v])=>[k,v[0]])}]}
+};
+
+/* ===== navigation ===== */
+const NAV=[
+  ['মূল',[['dashboard','📊','ড্যাশবোর্ড'],['orders','🛒','অর্ডার',()=>DB.all('orders').filter(o=>o.status==='pending').length],['prescriptions','📄','প্রেসক্রিপশন',()=>DB.all('prescriptions').filter(x=>x.status==='new').length]]],
+  ['ক্যাটালগ',[['products','💊','পণ্য'],['inventory','📦','ইনভেন্টরি',()=>DB.all('products').filter(p=>p.stock<=10).length],['categories','🗂️','ক্যাটাগরি'],['coupons','🎟️','কুপন']]],
+  ['সেবা',[['labTests','🧪','ল্যাব টেস্ট'],['labBookings','📅','ল্যাব বুকিং',()=>DB.all('labBookings').filter(x=>x.status==='new').length],['doctors','👨‍⚕️','ডাক্তার'],['appointments','🗓️','অ্যাপয়েন্টমেন্ট',()=>DB.all('appointments').filter(x=>x.status==='new').length]]],
+  ['কাস্টমার',[['customers','👥','কাস্টমার'],['messages','✉️','মেসেজ',()=>DB.all('messages').filter(x=>x.status==='new').length]]],
+  ['সাইট কন্টেন্ট',[['banners','🖼️','ব্যানার'],['sections','🧩','হোমপেজ সেকশন'],['posts','📝','ব্লগ'],['faqs','❓','FAQ'],['pages','📃','পেজ']]],
+  ['সিস্টেম',[['reports','📈','রিপোর্ট'],['settings','⚙️','সেটিংস'],['backup','💾','ব্যাকআপ']]]
+];
+function shell(){
+  $('#root').innerHTML=`<div class="layout"><aside id="side"></aside><div><div class="top"><button class="menu-btn" onclick="$('#side').classList.toggle('open')">☰</button><h1 id="ttl"></h1>
+    <a class="btn out sm" href="index.html" target="_blank">🌐 সাইট দেখুন</a><button class="btn gray sm" onclick="sessionStorage.removeItem('sb_admin');loginView()">লগআউট</button></div><div class="content" id="main"></div></div></div>`;
+}
+function renderSide(cur){
+  $('#side').innerHTML=`<div class="brand"><span>${esc(S().logoIcon||'✚')}</span>${esc(S().siteName)}</div>`+
+    NAV.map(([g,items])=>`<div class="grp">${g}</div>`+items.map(([k,ic,l,cnt])=>{const n=cnt?cnt():0;return `<a href="#${k}" class="${cur===k?'on':''}">${ic} ${l}${n?`<span class="n">${n}</span>`:''}</a>`}).join('')).join('');
+}
+
+/* ===== generic list ===== */
+const state={};
+function listView(key){
+  const sc=E[key],st=state[key]=state[key]||{q:'',f:{}};
+  $('#ttl').textContent=sc.icon+' '+sc.title;
+  let rows=[...DB.all(key)];
+  if(sc.sort)rows.sort(sc.sort);
+  if(st.q&&sc.search){const q=st.q.toLowerCase();rows=rows.filter(r=>sc.search.some(k=>String(r[k]||'').toLowerCase().includes(q)))}
+  (sc.filters||[]).forEach(f=>{const v=st.f[f.k];if(v)rows=rows.filter(r=>f.fn?f.fn(r,v):r[f.k]===v)});
+  const stCol=sc.cols.find(c=>c.status);
+  if(stCol&&st.f._status)rows=rows.filter(r=>r.status===st.f._status);
+  $('#main').innerHTML=`
+  ${sc.note?`<p style="background:var(--brand-light);padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:14px">ℹ️ ${sc.note}</p>`:''}
+  <div class="toolbar">
+    ${sc.search?`<input id="q" placeholder="🔍 খুঁজুন…" value="${esc(st.q)}">`:''}
+    ${(sc.filters||[]).map(f=>`<select data-f="${f.k}"><option value="">${f.l}</option>${f.opts().map(([v,l])=>`<option value="${esc(v)}" ${st.f[f.k]===v?'selected':''}>${esc(l)}</option>`).join('')}</select>`).join('')}
+    ${stCol?`<select data-f="_status"><option value="">সব স্ট্যাটাস</option>${Object.entries(stCol.status).map(([v,[l]])=>`<option value="${v}" ${st.f._status===v?'selected':''}>${l}</option>`).join('')}</select>`:''}
+    <span class="spacer"></span><span style="color:var(--muted);font-size:14px">${rows.length}টি</span>
+    ${key==='products'?'<button class="btn out" id="csvBtn">⬇ CSV</button>':''}
+    ${sc.noAdd?'':`<button class="btn" id="addBtn">+ নতুন ${sc.title}</button>`}
+  </div>
+  <div class="tbl"><table><thead><tr>${sc.cols.map(c=>`<th>${c.l}</th>`).join('')}<th style="text-align:right">অ্যাকশন</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr>${sc.cols.map(c=>`<td>${cell(c,r,key)}</td>`).join('')}<td><div class="actions"><button class="btn out sm" data-edit="${esc(r.id)}">এডিট</button><button class="btn red sm" data-del="${esc(r.id)}">মুছুন</button></div></td></tr>`).join('')||`<tr><td colspan="${sc.cols.length+1}" style="text-align:center;padding:40px;color:var(--muted)">কিছু পাওয়া যায়নি</td></tr>`}
+  </tbody></table></div>`;
+  const q=$('#q');if(q){q.oninput=()=>{st.q=q.value;listView(key);const n=$('#q');n.focus();n.setSelectionRange(n.value.length,n.value.length)}}
+  $$('[data-f]').forEach(s=>s.onchange=()=>{st.f[s.dataset.f]=s.value;listView(key)});
+  if($('#addBtn'))$('#addBtn').onclick=()=>editForm(key,null);
+  if($('#csvBtn'))$('#csvBtn').onclick=exportProductsCSV;
+  $$('[data-edit]').forEach(b=>b.onclick=()=>editForm(key,b.dataset.edit));
+  $$('[data-del]').forEach(b=>b.onclick=()=>{
+    const r=DB.get(key,b.dataset.del),why=sc.beforeDelete&&sc.beforeDelete(r);
+    if(why)return alert(why);
+    if(confirm('নিশ্চিতভাবে মুছে ফেলবেন?')){DB.remove(key,r.id);toast('মুছে ফেলা হয়েছে');refresh()}});
+  $$('[data-tog]').forEach(c=>c.onchange=()=>{DB.update(key,c.dataset.tog,{active:c.checked});toast(c.checked?'চালু হয়েছে':'বন্ধ হয়েছে')});
+  $$('[data-st]').forEach(s=>s.onchange=()=>{DB.update(key,s.dataset.st,{status:s.value});toast('স্ট্যাটাস আপডেট হয়েছে');renderSide(cur)});
+  $$('[data-view-img]').forEach(a=>a.onclick=e=>{e.preventDefault();const r=DB.get(key,a.dataset.viewImg);openModal(`<h3>প্রেসক্রিপশন — ${esc(r.name)} (${esc(r.phone)})</h3><img src="${esc(r.img)}" style="max-width:100%;border-radius:8px"><p style="margin-top:10px">${esc(r.note||'')}</p><div class="mfoot"><a class="btn out" href="${esc(r.img)}" download="prescription-${esc(r.phone)}.jpg">⬇ ডাউনলোড</a><button class="btn" onclick="closeModal()">বন্ধ</button></div>`)});
+}
+function cell(c,r){
+  if(c.toggle)return `<label class="sw"><input type="checkbox" data-tog="${esc(r.id)}" ${r.active?'checked':''}><span></span></label>`;
+  if(c.status)return `<select class="st-sel" data-st="${esc(r.id)}" style="border-color:${(c.status[r.status]||[])[1]||'#ccc'}">${Object.entries(c.status).map(([v,[l]])=>`<option value="${v}" ${r.status===v?'selected':''}>${l}</option>`).join('')}</select>`;
+  if(c.r)return c.r(r);
+  return esc(r[c.k]??'');
+}
+
+/* ===== generic form ===== */
+function editForm(key,id){
+  const sc=E[key],isNew=!id,o=isNew?{...(sc.defaults||{})}:{...DB.get(key,id)};
+  const imgs={};
+  openModal(`<h3>${isNew?'নতুন':'এডিট'} ${sc.title}</h3><form id="ef"><div class="form">${sc.fields.map(f=>field(f,o,isNew,imgs)).join('')}</div>
+    <div class="mfoot"><button type="button" class="btn gray" onclick="closeModal()">বাতিল</button><button class="btn">💾 সেভ করুন</button></div></form>`);
+  $$('#ef input[type=file]').forEach(inp=>inp.onchange=async()=>{
+    const f=inp.files[0];if(!f)return;const k=inp.dataset.img,fd=sc.fields.find(x=>x.k===k);
+    imgs[k]=await compressImage(f,fd.max||700);$(`#prev_${k}`).innerHTML=`<img src="${imgs[k]}">`});
+  $$('#ef [data-clear]').forEach(b=>b.onclick=()=>{imgs[b.dataset.clear]='';$(`#prev_${b.dataset.clear}`).innerHTML='—'});
+  $('#ef').onsubmit=e=>{
+    e.preventDefault();const fm=e.target,out={};
+    sc.fields.forEach(f=>{
+      if(f.t==='image'){if(f.k in imgs)out[f.k]=imgs[f.k];return}
+      if(f.t==='check'){out[f.k]=fm.elements[f.k].checked;return}
+      if(f.t==='multi'){out[f.k]=$$(`#ef [name="${f.k}"]:checked`).map(c=>c.value);return}
+      const el=fm.elements[f.k];if(!el||el.disabled)return;
+      out[f.k]=f.t==='number'?(el.value===''?0:+el.value):el.value.trim();
+    });
+    if(sc.beforeSave)sc.beforeSave(out);
+    if(key==='products'&&+out.price>+out.mrp)return toast('বিক্রয় মূল্য MRP-এর চেয়ে বেশি হতে পারে না');
+    if(isNew&&out.id&&DB.get(key,out.id))return toast('এই আইডি আগে থেকেই আছে');
+    if(key==='coupons'&&DB.all('coupons').some(c=>c.code===out.code&&c.id!==id))return toast('এই কোড আগে থেকেই আছে');
+    if(isNew)DB.insert(key,{...(sc.defaults||{}),...out});else DB.update(key,id,out);
+    closeModal();toast('সেভ হয়েছে ✓');refresh();
+  };
+}
+function field(f,o,isNew,imgs){
+  const v=o[f.k]??'',cls=f.full?'full':'',req=f.req?'required':'';
+  const L=`${f.l}${f.req?' *':''}`;
+  switch(f.t){
+    case 'textarea':return `<label class="f ${cls}">${L}<textarea name="${f.k}" rows="${f.rows||3}" ${req}>${esc(v)}</textarea></label>`;
+    case 'select':return `<label class="f ${cls}">${L}<select name="${f.k}" ${req}><option value="">— বাছাই করুন —</option>${f.opts().map(([a,b])=>`<option value="${esc(a)}" ${String(v)===String(a)?'selected':''}>${esc(b)}</option>`).join('')}</select></label>`;
+    case 'check':return `<label class="f ${cls}" style="display:flex;gap:8px;align-items:center;margin-top:22px"><input type="checkbox" name="${f.k}" ${v?'checked':''}> ${f.l}</label>`;
+    case 'multi':return `<div class="f ${cls}" style="margin-bottom:10px;font-size:13px;font-weight:600">${f.l}<div class="chk">${f.opts().map(([a,b])=>`<label><input type="checkbox" name="${f.k}" value="${esc(a)}" ${(v||[]).includes(a)?'checked':''}> ${esc(b)}</label>`).join('')||'<span style="color:var(--muted)">কোনো অপশন নেই</span>'}</div></div>`;
+    case 'image':return `<div class="f ${cls}" style="margin-bottom:10px;font-size:13px;font-weight:600">${f.l}<div class="imgprev"><div class="thumb" id="prev_${f.k}">${v?`<img src="${esc(v)}">`:'—'}</div><input type="file" accept="image/*" data-img="${f.k}"><button type="button" class="btn red sm" data-clear="${f.k}">সরান</button></div></div>`;
+    default:return `<label class="f ${cls}">${L}<input name="${f.k}" type="${f.t||'text'}" ${f.step?`step="${f.step}"`:''} ${f.pattern?`pattern="${f.pattern}" title="শুধু ছোট হাতের ইংরেজি অক্ষর, সংখ্যা ও -"`:''} value="${esc(v)}" ${req} ${f.createOnly&&!isNew?'disabled':''}></label>`;
+  }
+}
+
+/* ===== orders ===== */
+const FLOW=['pending','confirmed','processing','shipped','delivered','cancelled'];
+function ordersView(){
+  $('#ttl').textContent='🛒 অর্ডার ম্যানেজমেন্ট';
+  const st=state.orders=state.orders||{s:'',q:''};
+  let rows=DB.all('orders');
+  const counts={};rows.forEach(o=>counts[o.status]=(counts[o.status]||0)+1);
+  if(st.s)rows=rows.filter(o=>o.status===st.s);
+  if(st.q){const q=st.q.toLowerCase();rows=rows.filter(o=>(o.id+' '+o.name+' '+o.phone).toLowerCase().includes(q))}
+  $('#main').innerHTML=`<div class="tabs"><button data-s="" class="${!st.s?'on':''}">সব (${DB.all('orders').length})</button>${FLOW.map(s=>`<button data-s="${s}" class="${st.s===s?'on':''}">${STATUS[s].l} (${counts[s]||0})</button>`).join('')}</div>
+  <div class="toolbar"><input id="q" placeholder="🔍 অর্ডার নম্বর, নাম বা মোবাইল…" value="${esc(st.q)}"><span class="spacer"></span><button class="btn out" id="csv">⬇ CSV এক্সপোর্ট</button><button class="btn" id="newOrder">+ ম্যানুয়াল অর্ডার</button></div>
+  <div class="tbl"><table><thead><tr><th>অর্ডার</th><th>কাস্টমার</th><th>পণ্য</th><th>মোট</th><th>পেমেন্ট</th><th>স্ট্যাটাস</th><th></th></tr></thead><tbody>
+  ${rows.map(o=>`<tr><td><b>${esc(o.id)}</b><br><small style="color:var(--muted)">${dt(o.createdAt)}</small></td><td>${esc(o.name)}<br><small>${esc(o.phone)}</small></td>
+    <td><small>${o.items.length}টি আইটেম${o.rxImg?' · 📄 Rx':''}</small></td><td><b>${money(o.total)}</b></td>
+    <td><small>${PAY[o.payment]||o.payment}</small><br>${o.paid?'<span class="pill" style="background:var(--ok)">পরিশোধিত</span>':'<span class="pill" style="background:#9ca3af">বাকি</span>'}</td>
+    <td><select class="st-sel" data-ost="${esc(o.id)}" style="border-color:${STATUS[o.status].c};color:${STATUS[o.status].c};font-weight:600">${FLOW.map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${STATUS[s].l}</option>`).join('')}</select></td>
+    <td><div class="actions"><button class="btn out sm" data-open="${esc(o.id)}">বিস্তারিত</button><button class="btn gray sm" data-inv="${esc(o.id)}">🖨</button></div></td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">কোনো অর্ডার নেই</td></tr>'}
+  </tbody></table></div>`;
+  $$('[data-s]').forEach(b=>b.onclick=()=>{st.s=b.dataset.s;ordersView()});
+  $('#q').oninput=e=>{st.q=e.target.value;ordersView();const n=$('#q');n.focus();n.setSelectionRange(n.value.length,n.value.length)};
+  $$('[data-ost]').forEach(s=>s.onchange=()=>{setOrderStatus(s.dataset.ost,s.value);refresh()});
+  $$('[data-open]').forEach(b=>b.onclick=()=>orderDetail(b.dataset.open));
+  $$('[data-inv]').forEach(b=>b.onclick=()=>invoice(b.dataset.inv));
+  $('#csv').onclick=()=>downloadCSV('orders.csv',[['Order','Date','Name','Phone','Address','Items','Subtotal','Discount','Delivery','Total','Payment','Paid','Status'],...rows.map(o=>[o.id,new Date(o.createdAt).toISOString(),o.name,o.phone,o.address,o.items.map(i=>i.name+' x'+i.qty).join('; '),o.subtotal,o.discount,o.delivery,o.total,o.payment,o.paid?'yes':'no',o.status])]);
+  $('#newOrder').onclick=manualOrder;
+}
+function setOrderStatus(id,status){
+  const o=DB.get('orders',id);if(!o||o.status===status)return;
+  // বাতিল হলে স্টক ফেরত, বাতিল থেকে ফিরলে আবার স্টক কমানো
+  if(status==='cancelled'&&o.status!=='cancelled')o.items.forEach(i=>{const p=DB.get('products',i.id);if(p)p.stock+=i.qty});
+  if(o.status==='cancelled'&&status!=='cancelled')o.items.forEach(i=>{const p=DB.get('products',i.id);if(p)p.stock=Math.max(0,p.stock-i.qty)});
+  o.status=status;(o.history=o.history||[]).push({status,at:Date.now(),by:'admin'});
+  if(status==='delivered'&&o.payment==='cod')o.paid=true;
+  DB.save();toast('স্ট্যাটাস: '+STATUS[status].l);
+}
+function orderDetail(id){
+  const o=DB.get('orders',id);
+  openModal(`<h3>অর্ডার ${esc(o.id)} <span class="pill" style="background:${STATUS[o.status].c};font-size:13px;vertical-align:middle">${STATUS[o.status].l}</span></h3>
+  <div class="form"><div><b>কাস্টমার</b><br>${esc(o.name)}<br><a href="tel:${esc(o.phone)}" style="color:var(--brand)">📞 ${esc(o.phone)}</a></div><div><b>ঠিকানা</b><br>${esc(o.address)}<br><small>${esc(o.area||'')}</small></div></div>
+  ${o.note?`<p style="margin-top:10px;background:#fff8e6;padding:8px 12px;border-radius:8px">📝 ${esc(o.note)}</p>`:''}
+  <table class="oitems" style="margin:14px 0"><thead><tr><th>পণ্য</th><th>দাম</th><th>পরিমাণ</th><th style="text-align:right">মোট</th></tr></thead><tbody>
+  ${o.items.map(i=>`<tr><td>${esc(i.icon||'')} ${esc(i.name)}</td><td>${money(i.price)}</td><td>${i.qty}</td><td style="text-align:right">${money(i.price*i.qty)}</td></tr>`).join('')}
+  <tr><td colspan="3" style="text-align:right">সাবটোটাল</td><td style="text-align:right">${money(o.subtotal)}</td></tr>
+  ${o.discount?`<tr><td colspan="3" style="text-align:right">ডিসকাউন্ট ${o.coupon?'('+esc(o.coupon)+')':''}</td><td style="text-align:right">−${money(o.discount)}</td></tr>`:''}
+  <tr><td colspan="3" style="text-align:right">ডেলিভারি</td><td style="text-align:right">${money(o.delivery)}</td></tr>
+  <tr><td colspan="3" style="text-align:right"><b>সর্বমোট</b></td><td style="text-align:right"><b>${money(o.total)}</b></td></tr></tbody></table>
+  ${o.rxImg?`<p><b>প্রেসক্রিপশন:</b></p><img src="${esc(o.rxImg)}" style="max-width:240px;border-radius:8px;margin:6px 0 12px">`:''}
+  <div class="form"><label class="f">স্ট্যাটাস<select id="odSt">${FLOW.map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${STATUS[s].l}</option>`).join('')}</select></label>
+  <label class="f">পেমেন্ট (${PAY[o.payment]||o.payment})<select id="odPaid"><option value="0">বাকি</option><option value="1" ${o.paid?'selected':''}>পরিশোধিত</option></select></label>
+  <label class="f full">অ্যাডমিন নোট<input id="odNote" value="${esc(o.adminNote||'')}"></label></div>
+  <div class="hist"><b>হিস্ট্রি:</b> ${(o.history||[]).map(h=>`${STATUS[h.status]?STATUS[h.status].l:h.status} (${dt(h.at)})`).join(' → ')}</div>
+  <div class="mfoot"><button class="btn red" id="odDel" style="margin-right:auto">মুছুন</button><button class="btn gray" onclick="invoice('${esc(o.id)}')">🖨 ইনভয়েস</button><button class="btn gray" onclick="closeModal()">বন্ধ</button><button class="btn" id="odSave">💾 সেভ</button></div>`);
+  $('#odSave').onclick=()=>{setOrderStatus(o.id,$('#odSt').value);DB.update('orders',o.id,{paid:$('#odPaid').value==='1',adminNote:$('#odNote').value});closeModal();refresh()};
+  $('#odDel').onclick=()=>{if(confirm('অর্ডারটি স্থায়ীভাবে মুছবেন?')){DB.remove('orders',o.id);closeModal();refresh()}};
+}
+function manualOrder(){
+  const prods=DB.all('products').filter(p=>p.stock>0);
+  openModal(`<h3>ম্যানুয়াল অর্ডার (ফোন/হোয়াটসঅ্যাপ অর্ডার)</h3><form id="mo"><div class="form">
+    <label class="f">নাম *<input name="name" required></label><label class="f">মোবাইল *<input name="phone" required></label>
+    <label class="f full">ঠিকানা *<textarea name="address" rows="2" required></textarea></label>
+    <label class="f">পেমেন্ট<select name="payment">${Object.entries(PAY).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label>
+    <label class="f">ডেলিভারি চার্জ<input name="delivery" type="number" value="${S().deliveryCharge}"></label></div>
+    <div id="lines"></div><button type="button" class="btn out sm" id="addLine">+ পণ্য যোগ</button>
+    <p style="margin-top:12px;font-size:17px">সর্বমোট: <b id="moTot">৳0</b></p>
+    <div class="mfoot"><button type="button" class="btn gray" onclick="closeModal()">বাতিল</button><button class="btn">অর্ডার তৈরি</button></div></form>`);
+  const addLine=()=>{$('#lines').insertAdjacentHTML('beforeend',`<div style="display:flex;gap:8px;margin-bottom:8px" class="ln"><select class="lp" style="flex:1;border:1px solid var(--line);border-radius:8px;padding:7px">${prods.map(p=>`<option value="${p.id}">${esc(p.name)} — ${money(p.price)} (স্টক ${p.stock})</option>`).join('')}</select><input class="lq" type="number" min="1" value="1" style="width:70px;border:1px solid var(--line);border-radius:8px;padding:7px"><button type="button" class="btn red sm" onclick="this.parentNode.remove();calc()">×</button></div>`);calc()};
+  window.calc=()=>{let s=0;$$('.ln').forEach(l=>{const p=DB.get('products',l.querySelector('.lp').value);s+=p.price*(+l.querySelector('.lq').value||0)});s+=+$('#mo').delivery.value||0;$('#moTot').textContent=money(s)};
+  $('#addLine').onclick=addLine;$('#mo').oninput=calc;addLine();
+  $('#mo').onsubmit=e=>{e.preventDefault();const f=e.target;
+    const items=$$('.ln').map(l=>{const p=DB.get('products',l.querySelector('.lp').value);return{p,qty:+l.querySelector('.lq').value||1}});
+    if(!items.length)return toast('অন্তত একটি পণ্য দিন');
+    for(const i of items)if(i.qty>i.p.stock)return toast(i.p.name+' — স্টকে মাত্র '+i.p.stock+'টি');
+    const subtotal=items.reduce((s,i)=>s+i.p.price*i.qty,0),delivery=+f.delivery.value||0,now=Date.now(),phone=f.phone.value.trim();
+    let c=DB.all('customers').find(x=>x.phone===phone);if(!c)c=DB.insert('customers',{name:f.name.value,phone,address:f.address.value,pass:''});
+    items.forEach(i=>i.p.stock-=i.qty);
+    DB.data.orders.unshift({id:DB.nextOrderId(),customerId:c.id,name:f.name.value,phone,address:f.address.value,area:'',items:items.map(i=>({id:i.p.id,name:i.p.name,icon:i.p.icon,price:i.p.price,qty:i.qty})),
+      subtotal,discount:0,delivery,total:subtotal+delivery,coupon:'',payment:f.payment.value,paid:false,status:'confirmed',note:'ম্যানুয়াল অর্ডার',createdAt:now,history:[{status:'confirmed',at:now,by:'admin'}]});
+    DB.save();closeModal();toast('অর্ডার তৈরি হয়েছে ✓');refresh()};
+}
+function invoice(id){
+  const o=DB.get('orders',id),s=S(),w=window.open('','_blank');
+  if(!w)return toast('পপআপ ব্লক করা আছে — অনুমতি দিন');
+  w.document.write(`<html><head><meta charset="utf-8"><title>Invoice ${o.id}</title><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet"><style>body{font-family:'Hind Siliguri',sans-serif;max-width:760px;margin:30px auto;color:#222;padding:0 20px}h1{color:${s.primary};margin:0}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}th{background:${s.primary};color:#fff}.r{text-align:right}.top{display:flex;justify-content:space-between;border-bottom:3px solid ${s.primary};padding-bottom:12px}@media print{button{display:none}}</style></head><body>
+  <div class="top"><div><h1>${esc(s.siteName)}</h1><div>${esc(s.address)}<br>${esc(s.phone)} · ${esc(s.email)}</div></div><div class="r"><h2 style="margin:0">ইনভয়েস</h2>${esc(o.id)}<br>${new Date(o.createdAt).toLocaleDateString('en-GB')}</div></div>
+  <p><b>বিল প্রাপক:</b><br>${esc(o.name)}<br>${esc(o.phone)}<br>${esc(o.address)}</p>
+  <table><tr><th>#</th><th>পণ্য</th><th class="r">দাম</th><th class="r">পরিমাণ</th><th class="r">মোট</th></tr>${o.items.map((i,n)=>`<tr><td>${n+1}</td><td>${esc(i.name)}</td><td class="r">${money(i.price)}</td><td class="r">${i.qty}</td><td class="r">${money(i.price*i.qty)}</td></tr>`).join('')}
+  <tr><td colspan="4" class="r">সাবটোটাল</td><td class="r">${money(o.subtotal)}</td></tr>${o.discount?`<tr><td colspan="4" class="r">ডিসকাউন্ট</td><td class="r">−${money(o.discount)}</td></tr>`:''}<tr><td colspan="4" class="r">ডেলিভারি</td><td class="r">${money(o.delivery)}</td></tr><tr><td colspan="4" class="r"><b>সর্বমোট</b></td><td class="r"><b>${money(o.total)}</b></td></tr></table>
+  <p>পেমেন্ট: ${PAY[o.payment]||o.payment} — ${o.paid?'পরিশোধিত':'বাকি'}</p><p style="text-align:center;color:#888;margin-top:40px">আপনার কেনাকাটার জন্য ধন্যবাদ!</p><button onclick="print()" style="padding:10px 20px">🖨 প্রিন্ট</button></body></html>`);
+  w.document.close();
+}
+
+/* ===== dashboard ===== */
+function dashboard(){
+  $('#ttl').textContent='📊 ড্যাশবোর্ড';
+  const O=DB.all('orders'),valid=O.filter(o=>o.status!=='cancelled'),P=DB.all('products');
+  const today=new Date();today.setHours(0,0,0,0);
+  const todayO=valid.filter(o=>o.createdAt>=today.getTime());
+  const rev=valid.reduce((s,o)=>s+o.total,0),monthStart=new Date(today.getFullYear(),today.getMonth(),1).getTime();
+  const monthRev=valid.filter(o=>o.createdAt>=monthStart).reduce((s,o)=>s+o.total,0);
+  const days=[...Array(14)].map((_,i)=>{const d=new Date(today.getTime()-(13-i)*86400000),e=d.getTime()+86400000;return{l:d.getDate()+'/'+(d.getMonth()+1),v:valid.filter(o=>o.createdAt>=d.getTime()&&o.createdAt<e).reduce((s,o)=>s+o.total,0)}});
+  const mx=Math.max(1,...days.map(d=>d.v));
+  const sold={};valid.forEach(o=>o.items.forEach(i=>{sold[i.id]=sold[i.id]||{n:i.name,q:0,r:0};sold[i.id].q+=i.qty;sold[i.id].r+=i.qty*i.price}));
+  const top=Object.values(sold).sort((a,b)=>b.q-a.q).slice(0,6);
+  const low=P.filter(p=>p.stock<=10).sort((a,b)=>a.stock-b.stock).slice(0,6);
+  const sc={};O.forEach(o=>sc[o.status]=(sc[o.status]||0)+1);
+  const stat=(ic,v,l,bg,link)=>`<a href="#${link}" class="stat"><div class="ic" style="background:${bg}">${ic}</div><div><b>${v}</b><span>${l}</span></div></a>`;
+  $('#main').innerHTML=`<div class="cards">
+    ${stat('💰',money(todayO.reduce((s,o)=>s+o.total,0)),'আজকের বিক্রি ('+todayO.length+' অর্ডার)','#e7f4f3','orders')}
+    ${stat('📅',money(monthRev),'এই মাসের বিক্রি','#e8f0fe','reports')}
+    ${stat('🛒',sc.pending||0,'নতুন অর্ডার (অপেক্ষমাণ)','#fff4e0','orders')}
+    ${stat('📈',money(rev),'মোট বিক্রি ('+valid.length+' অর্ডার)','#eaf7ee','reports')}
+    ${stat('💊',P.length,'মোট পণ্য','#f3e8ff','products')}
+    ${stat('⚠️',P.filter(p=>p.stock<=10).length,'কম স্টক','#fdecec','inventory')}
+    ${stat('👥',DB.all('customers').length,'কাস্টমার','#e0f2fe','customers')}
+    ${stat('📄',DB.all('prescriptions').filter(x=>x.status==='new').length,'নতুন প্রেসক্রিপশন','#fef3c7','prescriptions')}
+  </div>
+  <div class="two"><div class="panel"><h3>গত ১৪ দিনের বিক্রি</h3><div class="bars">${days.map(d=>`<div><i style="height:${d.v/mx*100}%" data-v="${money(d.v)}"></i>${d.l}</div>`).join('')}</div></div>
+    <div class="panel"><h3>অর্ডার স্ট্যাটাস</h3>${FLOW.map(s=>`<div class="list-row"><span><span class="pill" style="background:${STATUS[s].c}">${STATUS[s].l}</span></span><b>${sc[s]||0}</b></div>`).join('')}</div></div>
+  <div class="two"><div class="panel"><h3>সাম্প্রতিক অর্ডার <a href="#orders" style="float:right;color:var(--brand);font-size:13px">সব দেখুন →</a></h3>
+    ${O.slice(0,7).map(o=>`<div class="list-row"><span><b>${esc(o.id)}</b> · ${esc(o.name)}<br><small style="color:var(--muted)">${dt(o.createdAt)}</small></span><span style="text-align:right"><b>${money(o.total)}</b><br><span class="pill" style="background:${STATUS[o.status].c}">${STATUS[o.status].l}</span></span></div>`).join('')||'<p style="color:var(--muted)">কোনো অর্ডার নেই</p>'}</div>
+    <div><div class="panel"><h3>সর্বাধিক বিক্রিত</h3>${top.map(t=>`<div class="list-row"><span>${esc(t.n)}</span><b>${t.q}টি</b></div>`).join('')||'<p style="color:var(--muted)">—</p>'}</div>
+    <div class="panel"><h3>⚠️ কম স্টক</h3>${low.map(p=>`<div class="list-row"><span>${esc(p.name)}</span><b style="color:${p.stock<=0?'var(--err)':'var(--warn)'}">${p.stock}</b></div>`).join('')||'<p style="color:var(--muted)">সব পণ্যের পর্যাপ্ত স্টক আছে ✓</p>'}</div></div></div>`;
+}
+
+/* ===== inventory (quick stock edit) ===== */
+function inventory(){
+  $('#ttl').textContent='📦 ইনভেন্টরি (দ্রুত স্টক ও দাম আপডেট)';
+  const st=state.inv=state.inv||{q:'',low:false};
+  let P=[...DB.all('products')].sort((a,b)=>a.stock-b.stock);
+  if(st.q)P=P.filter(p=>p.name.toLowerCase().includes(st.q.toLowerCase()));
+  if(st.low)P=P.filter(p=>p.stock<=10);
+  $('#main').innerHTML=`<div class="toolbar"><input id="q" placeholder="🔍 পণ্য খুঁজুন…" value="${esc(st.q)}"><label><input type="checkbox" id="lowOnly" ${st.low?'checked':''}> শুধু কম স্টক</label><span class="spacer"></span><button class="btn" id="saveAll">💾 সব সেভ করুন</button></div>
+  <div class="tbl"><table><thead><tr><th>পণ্য</th><th>MRP</th><th>বিক্রয় মূল্য</th><th>বর্তমান স্টক</th><th>স্টক যোগ (+)</th></tr></thead><tbody>
+  ${P.map(p=>`<tr data-id="${p.id}"><td><b>${esc(p.name)}</b><br><small style="color:var(--muted)">${esc(p.unit)}</small></td>
+    <td><input class="i-mrp" type="number" value="${p.mrp}" style="width:90px;border:1px solid var(--line);border-radius:6px;padding:5px"></td>
+    <td><input class="i-price" type="number" value="${p.price}" style="width:90px;border:1px solid var(--line);border-radius:6px;padding:5px"></td>
+    <td><input class="i-stock" type="number" value="${p.stock}" style="width:80px;border:1px solid var(--line);border-radius:6px;padding:5px;color:${p.stock<=0?'var(--err)':p.stock<=10?'var(--warn)':'inherit'};font-weight:600"></td>
+    <td><input class="i-add" type="number" placeholder="0" style="width:80px;border:1px solid var(--line);border-radius:6px;padding:5px"></td></tr>`).join('')}</tbody></table></div>`;
+  $('#q').oninput=e=>{st.q=e.target.value;inventory();const n=$('#q');n.focus();n.setSelectionRange(n.value.length,n.value.length)};
+  $('#lowOnly').onchange=e=>{st.low=e.target.checked;inventory()};
+  $('#saveAll').onclick=()=>{let n=0;$$('tr[data-id]').forEach(tr=>{const p=DB.get('products',tr.dataset.id);const mrp=+tr.querySelector('.i-mrp').value,price=+tr.querySelector('.i-price').value,stock=(+tr.querySelector('.i-stock').value||0)+(+tr.querySelector('.i-add').value||0);
+    if(p.mrp!==mrp||p.price!==price||p.stock!==stock){Object.assign(p,{mrp,price:Math.min(price,mrp),stock:Math.max(0,stock)});n++}});DB.save();toast(n+'টি পণ্য আপডেট হয়েছে ✓');refresh()};
+}
+
+/* ===== reports ===== */
+function reports(){
+  $('#ttl').textContent='📈 বিক্রয় রিপোর্ট';
+  const st=state.rep=state.rep||{from:new Date(Date.now()-29*86400000).toISOString().slice(0,10),to:new Date().toISOString().slice(0,10)};
+  const f=new Date(st.from).setHours(0,0,0,0),t=new Date(st.to).setHours(23,59,59,999);
+  const O=DB.all('orders').filter(o=>o.createdAt>=f&&o.createdAt<=t),V=O.filter(o=>o.status!=='cancelled');
+  const sum=k=>V.reduce((s,o)=>s+(+o[k]||0),0);
+  const byCat={},byPay={};
+  V.forEach(o=>{byPay[o.payment]=(byPay[o.payment]||0)+o.total;o.items.forEach(i=>{const p=DB.get('products',i.id),c=p?(DB.get('categories',p.cat)||{}).name||p.cat:'অন্যান্য';byCat[c]=(byCat[c]||0)+i.price*i.qty})});
+  const mx=Math.max(1,...Object.values(byCat));
+  $('#main').innerHTML=`<div class="toolbar"><label>শুরু <input type="date" id="rf" value="${st.from}"></label><label>শেষ <input type="date" id="rt" value="${st.to}"></label></div>
+  <div class="cards"><div class="stat"><div class="ic">🧾</div><div><b>${V.length}</b><span>সফল অর্ডার</span></div></div><div class="stat"><div class="ic">💰</div><div><b>${money(sum('total'))}</b><span>মোট বিক্রি</span></div></div>
+  <div class="stat"><div class="ic">🎟️</div><div><b>${money(sum('discount'))}</b><span>কুপন ডিসকাউন্ট</span></div></div><div class="stat"><div class="ic">🚚</div><div><b>${money(sum('delivery'))}</b><span>ডেলিভারি চার্জ</span></div></div>
+  <div class="stat"><div class="ic">📊</div><div><b>${money(V.length?sum('total')/V.length:0)}</b><span>গড় অর্ডার মূল্য</span></div></div><div class="stat"><div class="ic">❌</div><div><b>${O.length-V.length}</b><span>বাতিল অর্ডার</span></div></div></div>
+  <div class="two"><div class="panel"><h3>ক্যাটাগরি অনুযায়ী বিক্রি</h3>${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:14px"><span>${esc(c)}</span><b>${money(v)}</b></div><div style="height:8px;background:var(--bg);border-radius:4px"><div style="height:100%;width:${v/mx*100}%;background:var(--brand);border-radius:4px"></div></div></div>`).join('')||'<p style="color:var(--muted)">এই সময়ে কোনো বিক্রি নেই</p>'}</div>
+  <div class="panel"><h3>পেমেন্ট পদ্ধতি</h3>${Object.entries(byPay).map(([k,v])=>`<div class="list-row"><span>${PAY[k]||k}</span><b>${money(v)}</b></div>`).join('')||'<p style="color:var(--muted)">—</p>'}</div></div>`;
+  $('#rf').onchange=e=>{st.from=e.target.value;reports()};$('#rt').onchange=e=>{st.to=e.target.value;reports()};
+}
+
+/* ===== settings ===== */
+const SET_FIELDS=[
+  ['সাধারণ',[{k:'siteName',l:'সাইটের নাম',req:1},{k:'tagline',l:'ট্যাগলাইন'},{k:'logoIcon',l:'লোগো আইকন (ইমোজি/অক্ষর)'},{k:'logoImg',l:'লোগো ছবি',t:'image',max:200}]],
+  ['রং (থিম)',[{k:'primary',l:'প্রধান রং',t:'color'},{k:'primaryDark',l:'গাঢ় রং',t:'color'},{k:'accent',l:'অ্যাকসেন্ট রং (ছাড়/অফার)',t:'color'}]],
+  ['যোগাযোগ',[{k:'phone',l:'হটলাইন'},{k:'whatsapp',l:'হোয়াটসঅ্যাপ'},{k:'email',l:'ইমেইল'},{k:'address',l:'ঠিকানা'},{k:'facebook',l:'ফেসবুক লিংক'},{k:'instagram',l:'ইনস্টাগ্রাম লিংক'},{k:'youtube',l:'ইউটিউব লিংক'},{k:'linkedin',l:'লিংকডইন লিংক'}]],
+  ['ঘোষণা ও হেডার',[{k:'announcement',l:'উপরের ঘোষণা বার',full:1},{k:'announcementOn',l:'ঘোষণা বার দেখাবে',t:'check'},{k:'flashText',l:'ফ্ল্যাশ সেল বাটনের লেখা'},{k:'expressText',l:'ডেলিভারি ট্যাগের লেখা'}]],
+  ['ডেলিভারি',[{k:'deliveryCharge',l:'ঢাকার ভিতরে চার্জ (৳)',t:'number'},{k:'outsideDhakaCharge',l:'ঢাকার বাইরে চার্জ (৳)',t:'number'},{k:'freeDeliveryMin',l:'ফ্রি ডেলিভারি (ন্যূনতম ৳)',t:'number'},{k:'payments',l:'ফুটারে পেমেন্ট মাধ্যম (কমা দিয়ে)',full:1}]],
+  ['হোমপেজ পরিসংখ্যান',[{k:'statCustomers',l:'গ্রাহক'},{k:'statProducts',l:'পণ্য'},{k:'statDistricts',l:'জেলা'},{k:'statDelivery',l:'এক্সপ্রেস ডেলিভারি'}]],
+  ['নিরাপত্তা',[{k:'adminPass',l:'অ্যাডমিন পাসওয়ার্ড',req:1,t:'password'}]]
+];
+function settings(){
+  $('#ttl').textContent='⚙️ সাইট সেটিংস';
+  const s=S(),imgs={};
+  $('#main').innerHTML=`<form id="sf">${SET_FIELDS.map(([g,fs])=>`<div class="panel"><h3>${g}</h3><div class="form">${fs.map(f=>field(f,s,false,imgs)).join('')}</div></div>`).join('')}
+    <div style="position:sticky;bottom:0;background:var(--bg);padding:12px 0"><button class="btn" style="padding:11px 28px">💾 সেটিংস সেভ করুন</button></div></form>`;
+  $$('#sf input[type=file]').forEach(inp=>inp.onchange=async()=>{const f=inp.files[0];if(!f)return;imgs[inp.dataset.img]=await compressImage(f,200);$(`#prev_${inp.dataset.img}`).innerHTML=`<img src="${imgs[inp.dataset.img]}">`});
+  $$('#sf [data-clear]').forEach(b=>b.onclick=()=>{imgs[b.dataset.clear]='';$(`#prev_${b.dataset.clear}`).innerHTML='—'});
+  $('#sf').onsubmit=e=>{e.preventDefault();const fm=e.target;
+    SET_FIELDS.forEach(([,fs])=>fs.forEach(f=>{if(f.t==='image'){if(f.k in imgs)s[f.k]=imgs[f.k];return}const el=fm.elements[f.k];if(f.t==='check')s[f.k]=el.checked;else s[f.k]=f.t==='number'?+el.value:el.value.trim()}));
+    DB.save();applyTheme();renderSide(cur);toast('সেটিংস সেভ হয়েছে ✓ — সাইটে সাথে সাথে দেখা যাবে')};
+}
+
+/* ===== backup ===== */
+function backup(){
+  $('#ttl').textContent='💾 ব্যাকআপ ও রিস্টোর';
+  const size=(JSON.stringify(DB.data).length/1024).toFixed(0);
+  $('#main').innerHTML=`<div class="panel"><h3>ডেটা ব্যাকআপ</h3><p style="margin-bottom:12px;color:var(--muted)">সব পণ্য, অর্ডার, কাস্টমার ও সেটিংস একটি JSON ফাইলে ডাউনলোড করুন। (বর্তমান ডেটার আকার: ${size} KB, ব্রাউজারের সীমা ~৫০০০ KB)</p><button class="btn" id="exp">⬇ ব্যাকআপ ডাউনলোড</button></div>
+  <div class="panel"><h3>রিস্টোর</h3><p style="margin-bottom:12px;color:var(--muted)">আগের ব্যাকআপ ফাইল থেকে সব ডেটা ফিরিয়ে আনুন। বর্তমান ডেটা মুছে যাবে।</p><input type="file" id="imp" accept=".json"></div>
+  <div class="panel"><h3>পণ্য ইমপোর্ট (CSV)</h3><p style="margin-bottom:12px;color:var(--muted)">কলাম: name, brand, unit, cat, mrp, price, stock, icon, desc, rx (yes/no)। cat-এ ক্যাটাগরির আইডি দিন (যেমন: medicine)।</p><input type="file" id="csvImp" accept=".csv"> <button class="btn out sm" id="csvTpl">টেমপ্লেট ডাউনলোড</button></div>
+  <div class="panel" style="border-color:#f3c4c4"><h3 style="color:var(--err)">বিপদজনক এলাকা</h3><button class="btn red" id="clearOrders">সব ডেমো অর্ডার মুছুন</button> <button class="btn red" id="rst">সব রিসেট করে ডেমো ডেটায় ফিরুন</button></div>`;
+  $('#exp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(DB.data,null,1)],{type:'application/json'}));a.download='shasthobazar-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click()};
+  $('#imp').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.settings||!d.products)throw 0;if(!confirm('বর্তমান সব ডেটা প্রতিস্থাপন হবে। চালিয়ে যাবেন?'))return;DB.data=d;DB.save();toast('রিস্টোর সম্পন্ন ✓');boot()}catch(_){alert('ফাইলটি সঠিক ব্যাকআপ নয়')}};r.readAsText(f)};
+  $('#csvTpl').onclick=()=>downloadCSV('products-template.csv',[['name','brand','unit','cat','mrp','price','stock','icon','desc','rx'],['নাপা ৫০০','বেক্সিমকো','১০ ট্যাবলেট','medicine',12,10,100,'💊','জ্বর ও ব্যথায়','no']]);
+  $('#csvImp').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const rows=parseCSV(r.result);const h=rows.shift().map(x=>x.trim().toLowerCase());let n=0;
+    rows.forEach(row=>{if(!row.join('').trim())return;const o={};h.forEach((k,i)=>o[k]=row[i]);if(!o.name)return;
+      DB.data.products.unshift({id:DB.uid(),name:o.name,brand:o.brand||'',unit:o.unit||'১ পিস',cat:o.cat||'medicine',mrp:+o.mrp||+o.price||0,price:+o.price||0,stock:+o.stock||0,icon:o.icon||'💊',img:'',desc:o.desc||'',rx:/^(yes|1|true)$/i.test(o.rx||''),sections:[],rating:4.5,reviews:0,active:true,createdAt:Date.now()});n++});
+    DB.save();toast(n+'টি পণ্য ইমপোর্ট হয়েছে ✓');refresh()};r.readAsText(f)};
+  $('#clearOrders').onclick=()=>{if(confirm('সব অর্ডার মুছে যাবে। নিশ্চিত?')){DB.data.orders=[];DB.save();toast('অর্ডার মুছে ফেলা হয়েছে');refresh()}};
+  $('#rst').onclick=()=>{if(confirm('সব ডেটা মুছে ডেমো ডেটা ফিরে আসবে। নিশ্চিত?')){DB.reset();toast('রিসেট সম্পন্ন');boot()}};
+}
+function parseCSV(t){const rows=[];let row=[],cur='',q=false;t=t.replace(/^﻿/,'');for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){cur+='"';i++}else q=false}else cur+=c}else if(c==='"')q=true;else if(c===','){row.push(cur);cur=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(cur);rows.push(row);row=[];cur=''}else cur+=c}if(cur||row.length){row.push(cur);rows.push(row)}return rows}
+function downloadCSV(name,rows){const csv='﻿'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=name;a.click()}
+function exportProductsCSV(){downloadCSV('products.csv',[['name','brand','unit','cat','mrp','price','stock','icon','desc','rx'],...DB.all('products').map(p=>[p.name,p.brand,p.unit,p.cat,p.mrp,p.price,p.stock,p.icon,p.desc,p.rx?'yes':'no'])])}
+
+/* ===== router ===== */
+let cur='dashboard';
+const VIEWS={dashboard,orders:ordersView,inventory,reports,settings,backup};
+function refresh(){
+  cur=location.hash.slice(1)||'dashboard';
+  if(!VIEWS[cur]&&!E[cur])cur='dashboard';
+  renderSide(cur);(VIEWS[cur]||(()=>listView(cur)))();
+  $('#side').classList.remove('open');
+}
+function boot(){applyTheme();if(!authed())return loginView();shell();refresh()}
+window.addEventListener('hashchange',()=>{if(authed()){closeModal();refresh()}});
+// সাইট থেকে নতুন অর্ডার এলে লাইভ আপডেট (মডাল খোলা থাকলে বিরক্ত করবে না)
+window.onDBChange=()=>{if(!authed())return;const pend=DB.all('orders').filter(o=>o.status==='pending').length;if(pend>(window._lastPend||0))toast('🔔 নতুন অর্ডার এসেছে!');window._lastPend=pend;
+  if(!$('#modal').classList.contains('open')&&!document.querySelector('#main input:focus,#main textarea:focus'))refresh();else renderSide(cur)};
+window._lastPend=DB.all('orders').filter(o=>o.status==='pending').length;
+boot();
+</script>
+</body>
+</html>

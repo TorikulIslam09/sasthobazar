@@ -1,0 +1,35 @@
+# SasthoBazar - Apache virtual host (Ubuntu). Copy to /etc/apache2/sites-available/sasthobazar.conf,
+# replace example.com / paths, then:  a2enmod rewrite headers expires deflate ssl proxy_fcgi setenvif
+#                                     a2enconf php8.2-fpm && a2ensite sasthobazar && systemctl reload apache2
+# Certbot (--apache) creates the :443 copy of this host with the certificate.
+# The project's .htaccess files do the routing and blocking, so AllowOverride All is required.
+
+<VirtualHost *:80>
+    ServerName example.com
+    ServerAlias www.example.com
+    DocumentRoot /var/www/sasthobazar
+
+    <Directory /var/www/sasthobazar>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    # Defence in depth (the .htaccess files deny these too)
+    <DirectoryMatch "^/var/www/sasthobazar/(config|core|app|database|storage|cron|docs|deploy|install)">
+        Require all denied
+    </DirectoryMatch>
+
+    <FilesMatch \.php$>
+        SetHandler "proxy:unix:/run/php/php8.2-fpm.sock|fcgi://localhost"
+    </FilesMatch>
+
+    LimitRequestBody 20971520
+    ErrorLog ${APACHE_LOG_DIR}/sasthobazar-error.log
+    CustomLog ${APACHE_LOG_DIR}/sasthobazar-access.log combined
+</VirtualHost>
+
+# Server-wide (in /etc/apache2/conf-available/security.conf):
+#   ServerTokens Prod
+#   ServerSignature Off
+#   TraceEnable Off
