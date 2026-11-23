@@ -153,7 +153,7 @@ $router->group(['guard' => 'admin'], function (Router $r) {
         $r->post('/{id:\d+}/splits/{splitId:\d+}/status', 'AdminOrderController@splitStatus', ['permission' => 'orders.update_status']);
         $r->post('/{id:\d+}/note', 'AdminOrderController@note', ['permission' => 'orders.edit']);
         $r->post('/{id:\d+}/prescription', 'AdminOrderController@prescription', ['permission' => 'prescriptions.verify']);
-        $r->post('/{id:\d+}/payments/{paymentId:\d+}', 'AdminOrderController@payment', ['permission' => 'orders.edit']);
+        $r->post('/{id:\d+}/payments/{paymentId:\d+}', 'AdminOrderController@payment', ['permission' => 'orders.edit|payments.edit']);
         $r->post('/{id:\d+}/return', 'AdminOrderController@returnDecision', ['permission' => 'refunds.approve']);
         $r->post('/{id:\d+}/refunded', 'AdminOrderController@refunded', ['permission' => 'refunds.approve']);
     });
@@ -219,6 +219,11 @@ $router->group(['guard' => 'admin'], function (Router $r) {
     $r->post('/settings/orders', 'AdminSettingController@update', ['permission' => 'settings.edit']);
     $r->get('/settings/checkout', 'AdminSettingController@checkout', ['permission' => 'settings.view']);
     $r->post('/settings/checkout', 'AdminSettingController@saveCheckout', ['permission' => 'settings.edit']);
+    $r->get('/settings/watermark', 'AdminWatermarkController@index', ['permission' => 'settings.view']);
+    $r->post('/settings/watermark', 'AdminWatermarkController@save', ['permission' => 'settings.edit']);
+    $r->get('/settings/watermark/preview', 'AdminWatermarkController@preview', ['permission' => 'settings.view']);
+    $r->post('/settings/watermark/apply', 'AdminWatermarkController@apply', ['permission' => 'settings.edit']);
+    $r->post('/settings/watermark/remove', 'AdminWatermarkController@remove', ['permission' => 'settings.edit']);
     $r->get('/settings/sms', 'AdminMessagingController@sms', ['permission' => 'settings.view']);
     $r->post('/settings/sms', 'AdminMessagingController@saveSms', ['permission' => 'settings.edit']);
     $r->get('/settings/email', 'AdminMessagingController@email', ['permission' => 'settings.view']);
@@ -257,6 +262,47 @@ $router->group(['guard' => 'admin'], function (Router $r) {
     });
 
     // Support tickets + review moderation
+    // Page builder (sections on any storefront page)
+    $r->get('/page-builder', 'AdminPageBuilderController@index', ['permission' => 'page_builder.view']);
+    $r->get('/page-builder/create', 'AdminPageBuilderController@create', ['permission' => 'page_builder.create']);
+    $r->post('/page-builder', 'AdminPageBuilderController@store', ['permission' => 'page_builder.create']);
+    $r->get('/page-builder/{id:\d+}/edit', 'AdminPageBuilderController@edit', ['permission' => 'page_builder.edit']);
+    $r->post('/page-builder/{id:\d+}', 'AdminPageBuilderController@update', ['permission' => 'page_builder.edit']);
+    $r->post('/page-builder/{id:\d+}/toggle', 'AdminPageBuilderController@toggle', ['permission' => 'page_builder.edit']);
+    $r->post('/page-builder/{id:\d+}/move', 'AdminPageBuilderController@move', ['permission' => 'page_builder.edit']);
+    $r->post('/page-builder/{id:\d+}/duplicate', 'AdminPageBuilderController@duplicate', ['permission' => 'page_builder.create']);
+    $r->post('/page-builder/{id:\d+}/delete', 'AdminPageBuilderController@destroy', ['permission' => 'page_builder.delete']);
+
+    // Header, menus & colours (storefront look)
+    $r->get('/appearance', 'AdminAppearanceController@index', ['permission' => 'appearance.view']);
+    $r->post('/appearance', 'AdminAppearanceController@saveHeader', ['permission' => 'appearance.edit']);
+    $r->post('/appearance/links', 'AdminAppearanceController@storeLink', ['permission' => 'appearance.edit']);
+    $r->post('/appearance/links/{id:\d+}', 'AdminAppearanceController@updateLink', ['permission' => 'appearance.edit']);
+    $r->post('/appearance/links/{id:\d+}/toggle', 'AdminAppearanceController@toggleLink', ['permission' => 'appearance.edit']);
+    $r->post('/appearance/links/{id:\d+}/move', 'AdminAppearanceController@moveLink', ['permission' => 'appearance.edit']);
+    $r->post('/appearance/links/{id:\d+}/delete', 'AdminAppearanceController@deleteLink', ['permission' => 'appearance.edit']);
+
+    // Payments (all methods) + delivery locations
+    $r->get('/payments', 'AdminPaymentController@index', ['permission' => 'payments.view']);
+    $r->get('/payments/export', 'AdminPaymentController@export', ['permission' => 'payments.export']);
+    $r->post('/payments/{id:\d+}/verify', 'AdminPaymentController@verify', ['permission' => 'payments.edit']);
+    $r->get('/locations', 'AdminLocationController@index', ['permission' => 'locations.view']);
+    $r->post('/locations', 'AdminLocationController@store', ['permission' => 'locations.create']);
+    $r->post('/locations/{id:\d+}', 'AdminLocationController@update', ['permission' => 'locations.edit']);
+    $r->post('/locations/{id:\d+}/toggle', 'AdminLocationController@toggle', ['permission' => 'locations.edit']);
+    $r->post('/locations/{id:\d+}/delete', 'AdminLocationController@destroy', ['permission' => 'locations.delete']);
+
+    // Customers (registered + guest buyers)
+    $r->group(['prefix' => '/customers'], function (Router $r) {
+        $r->get('/', 'AdminCustomerController@index', ['permission' => 'customers.view']);
+        $r->get('/export', 'AdminCustomerController@export', ['permission' => 'customers.export']);
+        $r->get('/create', 'AdminCustomerController@create', ['permission' => 'customers.create']);
+        $r->post('/', 'AdminCustomerController@store', ['permission' => 'customers.create']);
+        $r->get('/{id:\d+}', 'AdminCustomerController@show', ['permission' => 'customers.view']);
+        $r->post('/{id:\d+}/status', 'AdminCustomerController@status', ['permission' => 'customers.edit']);
+        $r->post('/{id:\d+}/password', 'AdminCustomerController@password', ['permission' => 'customers.edit']);
+        $r->post('/{id:\d+}/delete', 'AdminCustomerController@destroy', ['permission' => 'customers.delete']);
+    });
     $r->group(['prefix' => '/support'], function (Router $r) {
         $r->get('/', 'AdminSupportController@index', ['permission' => 'support.view']);
         $r->get('/export', 'AdminSupportController@export', ['permission' => 'support.export']);
@@ -327,6 +373,7 @@ $router->group(['guard' => 'admin'], function (Router $r) {
     $r->get('/couriers', 'AdminCourierController@index', ['permission' => 'couriers.view']);
     $r->post('/couriers/mock-mode', 'AdminCourierController@mockMode', ['permission' => 'couriers.edit']);
     $r->post('/couriers/{id:\d+}', 'AdminCourierController@update', ['permission' => 'couriers.edit']);
+    $r->post('/couriers/{id:\d+}/test', 'AdminCourierController@test', ['permission' => 'couriers.edit']);
     $r->group(['prefix' => '/shipments'], function (Router $r) {
         $r->get('/', 'AdminShipmentController@index', ['permission' => 'shipments.view']);
         $r->get('/export', 'AdminShipmentController@export', ['permission' => 'shipments.export']);

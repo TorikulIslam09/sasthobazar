@@ -27,6 +27,7 @@ $tabs = ['' => __('all'), 'open' => __('orders_open'), 'delivered' => __('os_del
                     <span class="text-muted text-truncate"><?= e($o['first_item']) ?><?= (int) $o['items'] > 1 ? ' ' . e(__('and_more', ['n' => num((int) $o['items'] - 1)])) : '' ?></span>
                     <span><b><?= e(money($o['grand_total'])) ?></b> · <?= e(__('pm_' . $o['payment_method'])) ?></span>
                 </div>
+                <?php if (Order::customerCanCancel($o)): ?><div class="mt-2 small"><span class="text-danger fw-semibold"><i class="bi bi-x-circle"></i> <?= e(__('cancel_available')) ?></span></div><?php endif; ?>
             </a>
         <?php endforeach; ?>
             <div class="mt-3"><?= $pager->links() ?></div>

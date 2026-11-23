@@ -62,7 +62,7 @@ class OrderController extends Controller
     public function cancel(string $no): void
     {
         $o = $this->mine($no);
-        if (!in_array($o['status'], Order::CUSTOMER_CANCELLABLE, true)) {
+        if (!Order::customerCanCancel($o)) {
             flash('error', __('cancel_not_allowed'));
             redirect('account/orders/' . $o['order_no']);
         }

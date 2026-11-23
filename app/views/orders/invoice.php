@@ -7,6 +7,7 @@
     .invoice table td, .invoice table th { padding: 6px 8px; }
     .inv-head { border-bottom: 3px solid #0e7673; padding-bottom: 12px; margin-bottom: 16px; }
     .inv-brand { color: #0e7673; font-weight: 700; font-size: 22px; }
+    .inv-brand .bi-heart-pulse-fill { color: #e11d48; }
     @media print { .no-print { display: none !important; } .invoice { padding: 0; } @page { margin: 12mm; } }
 </style>
 <div class="no-print text-center my-3">

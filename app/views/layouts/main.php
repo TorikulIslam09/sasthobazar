@@ -14,12 +14,29 @@ $siteName = __('app_name');
 $siteLogo = (string) setting('site_logo', '');
 $footerPages = Database::getInstance()->fetchAll('SELECT slug, title_en, title_bn FROM pages WHERE is_active = 1 AND show_in_footer = 1 ORDER BY sort_order, id LIMIT 8');
 $isActive = static fn(string $path): bool => $path === '' ? $current === '' : ($current === $path || str_starts_with($current, $path . '/'));
+// Header / menus / colours are edited in Admin → Header, Menus & Colours (Menu model + settings group "appearance")
+$on = static fn(string $k): bool => (bool) setting($k, true);
+$menuLink = static function (array $m, string $class = '', string $inner = ''): string {
+    $href = Menu::href((string) $m['url']);
+    if ($href === null) {
+        return '';
+    }
+    return '<a href="' . e($href) . '"' . ($class !== '' ? ' class="' . e($class) . '"' : '')
+        . ((int) $m['new_tab'] ? ' target="_blank" rel="noopener"' : '') . '>' . ($inner !== '' ? $inner : e(Menu::label($m))) . '</a>';
+};
+$themeCss = Menu::themeCss();
+$announceText = trim((string) setting('announce_text_' . (lang() === 'bn' ? 'bn' : 'en'), '')) ?: (lang() === 'bn' ? trim((string) setting('announce_text_en', '')) : '');
+$announceLink = trim((string) setting('announce_link', ''));
+$announceHref = $announceLink !== '' ? Menu::href($announceLink) : null;
+$catCount = max(0, min(20, (int) setting('header_category_count', 8)));
+$secKey = Section::currentPageKey(); // page builder sections (Admin → Page Builder)
 ?>
 <!doctype html>
 <html lang="<?= e(lang()) ?>">
 <head>
 <?= View::partial('partials/head', ['title' => $title ?? '', 'metaDescription' => $metaDescription ?? '']) ?>
 <link href="<?= e(asset('assets/css/shop.css')) ?>" rel="stylesheet">
+<?php if ($themeCss !== ''): ?><style><?= $themeCss /* built only from validated #rrggbb values */ ?></style><?php endif; ?>
 </head>
 <body class="shop-body lang-<?= e(lang()) ?>"
       data-login-url="<?= e(url('login')) ?>"
@@ -27,15 +44,22 @@ $isActive = static fn(string $path): bool => $path === '' ? $current === '' : ($
       data-cart-url="<?= e(url('cart/add')) ?>"
       data-lang="<?= e(lang()) ?>">
 
+<?php if ($on('announce_enabled')): ?>
 <div class="sb-announce">
     <div class="container d-flex justify-content-between align-items-center gap-2">
-        <span class="text-truncate"><i class="bi bi-telephone"></i> <?= e(__('hotline')) ?>:
-            <a href="tel:<?= e(setting('contact_phone', '')) ?>"><?= e(num((string) setting('contact_phone', ''))) ?></a>
-            <span class="d-none d-md-inline">&nbsp;·&nbsp;<?= e(__('free_delivery_over', ['amount' => money(setting('free_shipping_threshold', 0))])) ?></span>
+        <span class="text-truncate">
+            <?php if ($on('announce_show_hotline') && setting('contact_phone')): ?>
+                <i class="bi bi-telephone"></i> <?= e(__('hotline')) ?>: <a href="tel:<?= e(setting('contact_phone', '')) ?>"><?= e(num((string) setting('contact_phone', ''))) ?></a><span class="d-none d-md-inline">&nbsp;·&nbsp;</span>
+            <?php endif; ?>
+            <span class="<?= $on('announce_show_hotline') && setting('contact_phone') ? 'd-none d-md-inline' : '' ?>">
+                <?php $aText = $announceText !== '' ? $announceText : __('free_delivery_over', ['amount' => money(setting('free_shipping_threshold', 0))]); ?>
+                <?php if ($announceHref): ?><a href="<?= e($announceHref) ?>"><?= e($aText) ?></a><?php else: ?><?= e($aText) ?><?php endif; ?>
+            </span>
         </span>
-        <?= View::partial('partials/lang_switch', ['class' => 'sb-lang']) ?>
+        <?php if ($on('announce_show_lang')): ?><?= View::partial('partials/lang_switch', ['class' => 'sb-lang']) ?><?php endif; ?>
     </div>
 </div>
+<?php endif; ?>
 
 <header class="sb-header">
     <div class="container">
@@ -50,20 +74,22 @@ $isActive = static fn(string $path): bool => $path === '' ? $current === '' : ($
             <form class="sb-search" role="search" action="<?= e(url('products')) ?>" method="get" autocomplete="off" data-suggest-url="<?= e(url('api/search')) ?>">
                 <label class="visually-hidden" for="sbSearch"><?= e(__('search')) ?></label>
                 <input id="sbSearch" name="q" type="search" value="<?= e($q) ?>" maxlength="100"
-                       placeholder="<?= e(__('search_placeholder')) ?>"
+                       placeholder="<?= e(Menu::text('search_placeholder', 'search_placeholder')) ?>"
                        role="combobox" aria-expanded="false" aria-controls="sbSuggest" aria-autocomplete="list">
                 <button type="submit" aria-label="<?= e(__('search')) ?>"><i class="bi bi-search"></i><span class="d-none d-md-inline ms-1"><?= e(__('search')) ?></span></button>
                 <div class="sb-suggest" id="sbSuggest" role="listbox" hidden></div>
             </form>
 
-            <a href="<?= e(url('prescription')) ?>" class="sb-rx-btn" title="<?= e(__('upload_prescription')) ?>"><i class="bi bi-file-earmark-medical"></i><span class="d-none d-md-inline"> <?= e(__('upload_prescription')) ?></span></a>
-            <a href="<?= e(url('offers')) ?>" class="sb-flash-btn d-none d-lg-inline-flex"><i class="bi bi-lightning-charge-fill"></i> <?= e(__('todays_offers')) ?></a>
+            <?php if ($on('header_show_rx') && Prescription::requestsEnabled()): ?><a href="<?= e(url('prescription')) ?>" class="sb-rx-btn" title="<?= e(__('upload_prescription')) ?>"><i class="bi bi-file-earmark-medical"></i><span class="d-none d-md-inline"> <?= e(__('upload_prescription')) ?></span></a><?php endif; ?>
+            <?php if ($on('header_show_offers') && ($offHref = Menu::href((string) setting('header_offers_link', 'offers') ?: 'offers'))): ?><a href="<?= e($offHref) ?>" class="sb-flash-btn d-none d-lg-inline-flex"><i class="bi bi-lightning-charge-fill"></i> <?= e(Menu::text('header_offers_label', 'todays_offers')) ?></a><?php endif; ?>
 
             <div class="sb-head-links">
+                <?php if ($on('header_show_wishlist')): ?>
                 <a href="<?= e(url('account/wishlist')) ?>" class="d-none d-lg-flex" title="<?= e(__('wishlist')) ?>">
                     <i class="bi bi-heart"></i><span class="lbl"><?= e(__('wishlist')) ?></span>
                     <span class="sb-count" data-wish-count <?= $wishCount ? '' : 'hidden' ?>><?= e(num($wishCount)) ?></span>
                 </a>
+                <?php endif; ?>
                 <a href="<?= e(url('cart')) ?>" title="<?= e(__('cart')) ?>">
                     <i class="bi bi-cart3"></i><span class="lbl"><?= e(__('cart')) ?></span>
                     <span class="sb-count" data-cart-count <?= $cartCount ? '' : 'hidden' ?>><?= e(num($cartCount)) ?></span>
@@ -100,9 +126,8 @@ $isActive = static fn(string $path): bool => $path === '' ? $current === '' : ($
         </div>
 
         <nav class="sb-tabs" aria-label="<?= e(__('categories')) ?>">
-            <a href="<?= e(url('/')) ?>" class="<?= $isActive('') ? 'active' : '' ?>"><?= e(__('home')) ?></a>
-            <a href="<?= e(url('products')) ?>" class="<?= $isActive('products') ? 'active' : '' ?>"><?= e(__('shop_all_products')) ?></a>
-            <?php foreach (array_slice($navCats, 0, 8) as $c): $path = 'category/' . $c['slug']; ?>
+            <?php foreach (Menu::items('header') as $m): ?><?= $menuLink($m, Menu::isCurrent((string) $m['url']) ? 'active' : '') ?><?php endforeach; ?>
+            <?php foreach ($on('header_show_categories') ? array_slice($navCats, 0, $catCount) : [] as $c): $path = 'category/' . $c['slug']; ?>
                 <a href="<?= e(url('category/' . rawurlencode($c['slug']))) ?>" class="<?= $isActive($path) ? 'active' : '' ?>"><?= e(Category::label($c)) ?></a>
             <?php endforeach; ?>
         </nav>
@@ -116,10 +141,10 @@ $isActive = static fn(string $path): bool => $path === '' ? $current === '' : ($
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body p-2">
-        <a class="sb-menu-link" href="<?= e(url('products')) ?>"><i class="bi bi-grid-3x3-gap"></i> <?= e(__('shop_all_products')) ?></a>
-        <a class="sb-menu-link" href="<?= e(url('offers')) ?>"><i class="bi bi-lightning-charge"></i> <?= e(__('todays_offers')) ?></a>
-        <a class="sb-menu-link" href="<?= e(url('prescription')) ?>"><i class="bi bi-file-earmark-medical"></i> <?= e(__('upload_prescription')) ?></a>
-        <hr class="my-2">
+        <?php foreach (Menu::items('mobile') as $m): ?>
+            <?= $menuLink($m, 'sb-menu-link', '<i class="bi ' . e($m['icon'] ?: 'bi-link-45deg') . '"></i> ' . e(Menu::label($m))) ?>
+        <?php endforeach; ?>
+        <?php if (Menu::items('mobile')): ?><hr class="my-2"><?php endif; ?>
         <?php foreach ($navCats as $c): ?>
             <a class="sb-menu-link" href="<?= e(url('category/' . rawurlencode($c['slug']))) ?>"><i class="bi <?= e($c['icon'] ?: 'bi-grid') ?>"></i> <?= e(Category::label($c)) ?></a>
         <?php endforeach; ?>
@@ -128,10 +153,26 @@ $isActive = static fn(string $path): bool => $path === '' ? $current === '' : ($
 
 <main class="container sb-main">
     <?= View::partial('partials/flash') ?>
+    <?= Section::render($secKey, 'top') ?>
     <?= $content ?>
+    <?= Section::render($secKey, 'bottom') ?>
 </main>
 
 <footer class="sb-footer">
+    <?php if ($on('footer_track_enabled')): ?>
+    <div class="sb-f-track">
+        <div class="container">
+            <form method="get" action="<?= e(url('track')) ?>" class="sb-f-track-form">
+                <div class="sb-f-track-title"><i class="bi bi-truck"></i><div><b><?= e(Menu::text('footer_track_title', 'track_order')) ?></b><small><?= e(__('ftrack_sub')) ?></small></div></div>
+                <label class="visually-hidden" for="ftNo"><?= e(__('order_no')) ?></label>
+                <input class="form-control" id="ftNo" name="order_no" maxlength="30" required placeholder="<?= e(__('order_no')) ?> (SB…)">
+                <label class="visually-hidden" for="ftCt"><?= e(__('track_contact')) ?></label>
+                <input class="form-control" id="ftCt" name="contact" maxlength="191" required placeholder="<?= e(__('track_contact_ph')) ?>">
+                <button class="btn btn-light fw-semibold"><i class="bi bi-search"></i> <?= e(__('ftrack_btn')) ?></button>
+            </form>
+        </div>
+    </div>
+    <?php endif; ?>
     <div class="container">
         <div class="sb-f-grid">
             <div class="sb-f-about">
@@ -145,23 +186,19 @@ $isActive = static fn(string $path): bool => $path === '' ? $current === '' : ($
                 </div>
             </div>
             <div>
-                <h5><?= e(__('quick_links')) ?></h5>
+                <h5><?= e(Menu::text('footer_1_title', 'quick_links')) ?></h5>
                 <ul>
-                    <li><a href="<?= e(url('products')) ?>"><?= e(__('shop_all_products')) ?></a></li>
-                    <li><a href="<?= e(url('offers')) ?>"><?= e(__('todays_offers')) ?></a></li>
-                    <li><a href="<?= e(url('products?sort=newest')) ?>"><?= e(__('new_arrivals')) ?></a></li>
-                    <li><a href="<?= e(url('track')) ?>"><?= e(__('track_order')) ?></a></li>
-                    <li><a href="<?= e(url('prescription')) ?>"><?= e(__('upload_prescription')) ?></a></li>
+                    <?php foreach (Menu::items('footer_1') as $m): ?><li><?= $menuLink($m) ?></li><?php endforeach; ?>
                 </ul>
             </div>
             <div>
-                <h5><?= e(__('information')) ?></h5>
+                <h5><?= e(Menu::text('footer_2_title', 'information')) ?></h5>
                 <ul>
                     <?php foreach ($footerPages as $fp): ?><li><a href="<?= e(url('page/' . $fp['slug'])) ?>"><?= e(tr($fp['title_bn'], $fp['title_en'])) ?></a></li><?php endforeach; ?>
-                    <li><a href="<?= e(url('faq')) ?>"><?= e(__('faq_title')) ?></a></li>
-                    <li><a href="<?= e(url('blog')) ?>"><?= e(__('blog_title')) ?></a></li>
+                    <?php foreach (Menu::items('footer_2') as $m): ?><li><?= $menuLink($m) ?></li><?php endforeach; ?>
                 </ul>
             </div>
+            <?php if ($on('footer_show_categories')): ?>
             <div>
                 <h5><?= e(__('categories')) ?></h5>
                 <ul>
@@ -170,6 +207,7 @@ $isActive = static fn(string $path): bool => $path === '' ? $current === '' : ($
                     <?php endforeach; ?>
                 </ul>
             </div>
+            <?php endif; ?>
             <div>
                 <h5><?= e(__('my_account')) ?></h5>
                 <ul>
@@ -201,7 +239,7 @@ $isActive = static fn(string $path): bool => $path === '' ? $current === '' : ($
             <?php if (setting('nagad_enabled')): ?><span>Nagad</span><?php endif; ?>
             <?php if (setting('sslcommerz_enabled')): ?><span><?= e(__('pay_card')) ?></span><?php endif; ?>
         </div>
-        <div class="sb-copy">© <?= e(num(date('Y'))) ?> <?= e($siteName) ?> — <?= e(__('all_rights')) ?></div>
+        <div class="sb-copy">© <?= e(num(date('Y'))) ?> <?= e($siteName) ?> — <?= e(Menu::text('footer_copyright', 'all_rights')) ?></div>
     </div>
 </footer>
 

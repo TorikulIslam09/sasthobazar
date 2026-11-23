@@ -63,6 +63,13 @@ $ro = !can('settings.edit');
                         <input class="<?= $cls('return_window_days') ?>" id="rwd" name="return_window_days" value="<?= e($val('return_window_days')) ?>" inputmode="numeric">
                         <?= $err('return_window_days') ?>
                     </div>
+                    <div class="col-12">
+                        <label class="form-label" for="ccu"><?= e(__('cancel_until_label')) ?></label>
+                        <select class="form-select" id="ccu" name="customer_cancel_until">
+                            <?php foreach (array_keys(Order::CANCEL_UNTIL) as $cu): ?><option value="<?= $cu ?>" <?= $val('customer_cancel_until') === $cu ? 'selected' : '' ?>><?= e(__('cancel_until_' . $cu)) ?></option><?php endforeach; ?>
+                        </select>
+                        <div class="form-text"><?= e(__('cancel_until_help')) ?></div>
+                    </div>
                     <div class="col-6">
                         <label class="form-label" for="pre"><?= e(__('order_prefix')) ?></label>
                         <input class="<?= $cls('order_prefix') ?> text-uppercase" id="pre" name="order_prefix" value="<?= e($val('order_prefix')) ?>" maxlength="6">

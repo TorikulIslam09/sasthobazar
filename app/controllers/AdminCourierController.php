@@ -6,7 +6,7 @@ class AdminCourierController extends Controller
 {
     /** Extra config fields per courier (stored in api_config). */
     public const FIELDS = [
-        'pathao'    => ['client_id', 'username', 'password', 'store_id', 'default_city_id', 'default_zone_id'],
+        'pathao'    => ['client_id', 'username', 'password', 'store_id', 'webhook_secret', 'default_city_id', 'default_zone_id'],
         'steadfast' => [],
         'redx'      => ['delivery_area_id', 'pickup_store_id'],
         'paperfly'  => ['username', 'password', 'pickup_thana', 'pickup_district'],
@@ -48,6 +48,9 @@ class AdminCourierController extends Controller
         if (Helpers::str('regen_token') === '1' || empty($cfg['webhook_token'])) {
             $cfg['webhook_token'] = bin2hex(random_bytes(20));
         }
+        if ($c['code'] === 'pathao' && trim((string) ($cfg['webhook_secret'] ?? '')) === '') {
+            $cfg['webhook_secret'] = bin2hex(random_bytes(16)); // paste this into Pathao merchant panel → Developers API → Webhook
+        }
         $data = [
             'name'                  => mb_substr(trim(Helpers::str('name')) ?: $c['name'], 0, 100),
             'phone'                 => mb_substr(trim(Helpers::str('phone')), 0, 20) ?: null,
@@ -71,6 +74,34 @@ class AdminCourierController extends Controller
         $this->db->update('couriers', $data, 'id = :id', ['id' => (int) $id]);
         Audit::log('couriers.update', 'couriers', (int) $id, null, ['is_active' => $data['is_active'], 'mock' => $cfg['mock'], 'keys_changed' => isset($data['api_key']) || isset($data['api_secret'])]);
         flash('success', __('courier_saved', ['name' => $data['name']]));
+        redirect('admin/couriers#c' . (int) $id);
+    }
+
+    /** Test the courier login (live API, even in test mode). Pathao: also lists the merchant's stores and their IDs. */
+    public function test(string $id): void
+    {
+        $c = Courier::find((int) $id);
+        if (!$c) {
+            $this->notFound();
+        }
+        $adapter = Courier::adapter($c);
+        if ($c['code'] !== 'pathao' || !method_exists($adapter, 'stores')) {
+            flash('info', __('courier_test_na'));
+            redirect('admin/couriers#c' . (int) $id);
+        }
+        $cfg = Courier::config($c);
+        if (trim((string) ($cfg['client_id'] ?? '')) === '' || (string) $c['api_secret'] === '' || trim((string) ($cfg['username'] ?? '')) === '' || (string) ($cfg['password'] ?? '') === '') {
+            flash('error', __('pathao_test_need_keys'));
+            redirect('admin/couriers#c' . (int) $id);
+        }
+        try {
+            $stores = $adapter->stores();
+            $_SESSION['pathao_stores'] = array_slice($stores, 0, 20);
+            flash('success', __('pathao_test_ok', ['n' => num(count($stores))]));
+        } catch (Throwable $e) {
+            flash('error', $e->getMessage());
+        }
+        Audit::log('couriers.test', 'couriers', (int) $id);
         redirect('admin/couriers#c' . (int) $id);
     }
 

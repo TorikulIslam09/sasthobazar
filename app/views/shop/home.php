@@ -56,6 +56,8 @@ $hasProducts = $sections['featured'] || $sections['newest'] || $sections['flash'
     <?php endif; ?>
 </section>
 
+<?= Section::render('home', 'after_slider') ?>
+
 <!-- Quick links -->
 <div class="sb-chips">
     <a href="<?= e(url('offers')) ?>"><i class="bi bi-gift"></i> <?= e(__('todays_offers')) ?></a>
@@ -110,6 +112,8 @@ $hasProducts = $sections['featured'] || $sections['newest'] || $sections['flash'
         </div>
     </section>
 <?php endif; ?>
+
+<?= Section::render('home', 'after_categories') ?>
 
 <?php
 $blocks = [

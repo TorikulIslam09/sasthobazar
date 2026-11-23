@@ -41,42 +41,128 @@ final class CourierOwn extends CourierBase
     }
 }
 
-/** Pathao Courier merchant API (OAuth password grant). Config: client_id, client_secret (api_secret), username, password, store_id. */
+/**
+ * Pathao Courier (Aladdin merchant API).
+ *  - Login: client_id + client_secret (api_secret) + merchant email (username) + password → access token (cached until it expires)
+ *  - Parcels: city / zone / area are NOT sent - Pathao reads them from the full address (house, area, upazila, district).
+ *    (default_city_id / default_zone_id are only used if filled in, e.g. for a store that needs them.)
+ *  - Webhook: Pathao sends the secret in X-PATHAO-Signature; we answer 202 with X-Pathao-Merchant-Webhook-Integration-Secret.
+ * Sandbox: https://courier-api-sandbox.pathao.com   Live: https://api-hermes.pathao.com
+ */
 final class CourierPathao extends CourierBase
 {
     protected array $statusMap = [
-        'pending' => 'booked', 'pickup_requested' => 'booked', 'assigned_for_pickup' => 'booked', 'picked' => 'picked_up',
-        'at_the_sorting_hub' => 'in_transit', 'in_transit' => 'in_transit', 'received_at_last_mile_hub' => 'in_transit',
+        'created' => 'booked', 'pending' => 'booked', 'pickup_requested' => 'booked', 'assigned_for_pickup' => 'booked',
+        'pickup_failed' => 'on_hold', 'pickup_cancelled' => 'cancelled', 'pickup_cancel' => 'cancelled',
+        'picked' => 'picked_up', 'at_the_sorting_hub' => 'in_transit', 'in_transit' => 'in_transit', 'received_at_last_mile_hub' => 'in_transit',
         'assigned_for_delivery' => 'out_for_delivery', 'delivered' => 'delivered', 'partial_delivery' => 'partial_delivered',
-        'delivery_failed' => 'failed', 'on_hold' => 'on_hold', 'return' => 'returning', 'returned' => 'returned', 'pickup_cancelled' => 'cancelled',
+        'delivery_failed' => 'failed', 'on_hold' => 'on_hold', 'return' => 'returning', 'returned' => 'returned',
+        'paid_return' => 'returned', 'exchanged' => 'delivered',
     ];
 
     public function configured(): bool
     {
-        return $this->cfg('client_id') !== '' && (string) $this->courier['api_secret'] !== '' && $this->cfg('username') !== '' && $this->cfg('store_id') !== '';
+        return $this->cfg('client_id') !== '' && (string) $this->courier['api_secret'] !== '' && $this->cfg('username') !== ''
+            && $this->cfg('password') !== '' && $this->cfg('store_id') !== '';
     }
 
-    private function token(): string
+    /** Pathao status text / event ("order.pickup-requested", "Pickup Requested") → our status. */
+    public function mapStatus(string $text): ?string
     {
+        $t = strtolower(trim($text));
+        $t = (string) preg_replace('/^order\./', '', $t);
+        $t = (string) preg_replace('/[\s\-]+/', '_', $t);
+        if (in_array($t, ['paid', 'webhook_integration', 'store_created', 'store_updated'], true)) {
+            return null; // money / setup events, not parcel movement
+        }
+        return parent::mapStatus($t);
+    }
+
+    private function tokenFile(): string
+    {
+        return STORAGE_PATH . '/private/cache/pathao-token-' . (int) $this->courier['id'] . '.json';
+    }
+
+    /** Access token, reused until 5 minutes before it expires (Pathao tokens last days). */
+    private function token(bool $fresh = false): string
+    {
+        $file = $this->tokenFile();
+        $sig = hash('sha256', $this->base() . '|' . $this->cfg('client_id') . '|' . $this->cfg('username'));
+        if (!$fresh && is_file($file)) {
+            $c = json_decode((string) @file_get_contents($file), true);
+            if (is_array($c) && ($c['sig'] ?? '') === $sig && ($c['expires'] ?? 0) > time() + 300 && !empty($c['token'])) {
+                return (string) $c['token'];
+            }
+        }
         $r = $this->http('POST', $this->base() . '/aladdin/api/v1/issue-token', [], [
             'client_id' => $this->cfg('client_id'), 'client_secret' => (string) $this->courier['api_secret'],
             'username' => $this->cfg('username'), 'password' => $this->cfg('password'), 'grant_type' => 'password',
         ]);
-        return (string) ($r['access_token'] ?? '');
+        $token = (string) ($r['access_token'] ?? '');
+        if ($token === '') {
+            throw new OrderException(__('courier_api_error', ['courier' => $this->courier['name'], 'msg' => 'login failed (check client id / secret / email / password)']));
+        }
+        if (!is_dir(dirname($file))) {
+            @mkdir(dirname($file), 0770, true);
+        }
+        @file_put_contents($file, json_encode(['token' => $token, 'expires' => time() + max(600, (int) ($r['expires_in'] ?? 3600)), 'sig' => $sig]), LOCK_EX);
+        @chmod($file, 0600);
+        return $token;
+    }
+
+    /** Authorised API call; logs in again once if the saved token was rejected. */
+    private function api(string $method, string $path, ?array $body = null): array
+    {
+        try {
+            return $this->http($method, $this->base() . $path, ['Authorization: Bearer ' . $this->token()], $body);
+        } catch (OrderException $e) {
+            if (!str_contains(strtolower($e->getMessage()), 'unauth') && !str_contains($e->getMessage(), '401')) {
+                throw $e;
+            }
+            return $this->http($method, $this->base() . $path, ['Authorization: Bearer ' . $this->token(true)], $body);
+        }
+    }
+
+    /** Admin "Test connection": logs in and returns the merchant's stores [id, name, address]. */
+    public function stores(): array
+    {
+        $r = $this->api('GET', '/aladdin/api/v1/stores');
+        $out = [];
+        foreach ((array) ($r['data']['data'] ?? $r['data'] ?? []) as $st) {
+            if (is_array($st) && isset($st['store_id'])) {
+                $out[] = ['id' => (string) $st['store_id'], 'name' => (string) ($st['store_name'] ?? ''), 'address' => (string) ($st['store_address'] ?? ''), 'active' => !empty($st['is_active'])];
+            }
+        }
+        return $out;
     }
 
     protected function realCreate(array $p): array
     {
-        $r = $this->http('POST', $this->base() . '/aladdin/api/v1/orders', ['Authorization: Bearer ' . $this->token()], [
-            'store_id' => (int) $this->cfg('store_id'), 'merchant_order_id' => $p['invoice'],
-            'recipient_name' => $p['recipient_name'], 'recipient_phone' => $p['recipient_phone'], 'recipient_address' => $p['address'],
-            'recipient_city' => (int) $this->cfg('default_city_id', '1'), 'recipient_zone' => (int) $this->cfg('default_zone_id', '1'),
-            'delivery_type' => $p['express'] ? 12 : 48, 'item_type' => 2, 'special_instruction' => $p['note'],
-            'item_quantity' => $p['items'], 'item_weight' => $p['weight_kg'], 'amount_to_collect' => (int) round($p['cod_amount']),
-            'item_description' => $p['description'],
-        ]);
+        $body = [
+            'store_id'            => (int) $this->cfg('store_id'),
+            'merchant_order_id'   => $p['invoice'],
+            'recipient_name'      => mb_substr($p['recipient_name'], 0, 100),
+            'recipient_phone'     => $p['recipient_phone'],
+            // full address: Pathao detects city / zone / area from it
+            'recipient_address'   => mb_substr($p['address'] . ($p['postcode'] !== '' ? ' - ' . $p['postcode'] : ''), 0, 220),
+            'delivery_type'       => $p['express'] ? 12 : 48,
+            'item_type'           => 2, // parcel
+            'special_instruction' => $p['note'],
+            'item_quantity'       => $p['items'],
+            'item_weight'         => $p['weight_kg'],
+            'amount_to_collect'   => (int) round($p['cod_amount']),
+            'item_description'    => $p['description'],
+        ];
+        if ($this->cfg('default_city_id') !== '' && $this->cfg('default_zone_id') !== '') { // only when the admin fills them in
+            $body['recipient_city'] = (int) $this->cfg('default_city_id');
+            $body['recipient_zone'] = (int) $this->cfg('default_zone_id');
+        }
+        $r = $this->api('POST', '/aladdin/api/v1/orders', $body);
         $d = $r['data'] ?? [];
-        return ['tracking_no' => (string) ($d['consignment_id'] ?? ''), 'consignment_id' => (string) ($d['consignment_id'] ?? ''), 'fee' => (float) ($d['delivery_fee'] ?? 0), 'raw' => $r];
+        if (empty($d['consignment_id'])) {
+            throw new OrderException(__('courier_api_error', ['courier' => $this->courier['name'], 'msg' => (string) ($r['message'] ?? 'no consignment id')]));
+        }
+        return ['tracking_no' => (string) $d['consignment_id'], 'consignment_id' => (string) $d['consignment_id'], 'fee' => (float) ($d['delivery_fee'] ?? 0), 'raw' => $r];
     }
 
     protected function realCancel(string $consignment, string $tracking): bool
@@ -86,7 +172,7 @@ final class CourierPathao extends CourierBase
 
     protected function realTrack(string $consignment, string $tracking): ?array
     {
-        $r = $this->http('GET', $this->base() . '/aladdin/api/v1/orders/' . rawurlencode($consignment) . '/info', ['Authorization: Bearer ' . $this->token()]);
+        $r = $this->api('GET', '/aladdin/api/v1/orders/' . rawurlencode($consignment) . '/info');
         $st = (string) ($r['data']['order_status_slug'] ?? $r['data']['order_status'] ?? '');
         return $st !== '' ? ['status' => $this->mapStatus($st), 'note' => $st, 'raw' => $r] : null;
     }
@@ -94,8 +180,8 @@ final class CourierPathao extends CourierBase
     protected function parseWebhook(array $p): array
     {
         $ref = $p['consignment_id'] ?? null;
-        $st = $p['order_status'] ?? $p['order_status_slug'] ?? $p['event'] ?? null;
-        return $ref && $st ? [['ref' => (string) $ref, 'status' => $this->mapStatus(str_replace('order.', '', (string) $st)), 'note' => (string) $st]] : [];
+        $st = $p['event'] ?? $p['order_status_slug'] ?? $p['order_status'] ?? null;
+        return $ref && $st ? [['ref' => (string) $ref, 'status' => $this->mapStatus((string) $st), 'note' => (string) $st]] : [];
     }
 }
 

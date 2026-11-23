@@ -59,7 +59,7 @@ return [
 
         'orders'         => ['group' => 'sales',     'bn' => 'অর্ডার',            'en' => 'Orders',             'icon' => 'bi-receipt',               'url' => 'admin/orders', 'actions' => ['view', 'create', 'edit', 'update_status', 'cancel', 'export']],
         'prescriptions'  => ['group' => 'sales',     'bn' => 'প্রেসক্রিপশন',      'en' => 'Prescriptions',      'icon' => 'bi-file-medical',          'url' => 'admin/prescriptions', 'actions' => ['view', 'verify', 'update_status']],
-        'customers'      => ['group' => 'sales',     'bn' => 'কাস্টমার',           'en' => 'Customers',          'icon' => 'bi-people',                'url' => null, 'actions' => ['view', 'create', 'edit', 'delete', 'export']],
+        'customers'      => ['group' => 'sales',     'bn' => 'কাস্টমার',           'en' => 'Customers',          'icon' => 'bi-people',                'url' => 'admin/customers', 'actions' => ['view', 'create', 'edit', 'delete', 'export']],
         'reviews'        => ['group' => 'sales',     'bn' => 'রিভিউ',             'en' => 'Reviews',            'icon' => 'bi-star',                  'url' => 'admin/reviews', 'actions' => ['view', 'moderate', 'delete']],
 
         'vendors'        => ['group' => 'vendors',   'bn' => 'ভেন্ডর',            'en' => 'Vendors',            'icon' => 'bi-shop',                  'url' => 'admin/vendors', 'actions' => ['view', 'edit', 'approve', 'delete']],
@@ -75,14 +75,16 @@ return [
         'shipping'       => ['group' => 'logistics', 'bn' => 'শিপিং জোন ও রেট',    'en' => 'Shipping Zones',     'icon' => 'bi-truck',                 'url' => 'admin/shipping', 'actions' => ['view', 'edit', 'delete']],
         'couriers'       => ['group' => 'logistics', 'bn' => 'কুরিয়ার',            'en' => 'Couriers',           'icon' => 'bi-bicycle',               'url' => 'admin/couriers', 'actions' => ['view', 'edit']],
         'shipments'      => ['group' => 'logistics', 'bn' => 'শিপমেন্ট',           'en' => 'Shipments',          'icon' => 'bi-send',                  'url' => 'admin/shipments', 'actions' => ['view', 'create', 'edit', 'export']],
-        'locations'      => ['group' => 'logistics', 'bn' => 'লোকেশন',            'en' => 'Locations',          'icon' => 'bi-geo-alt',               'url' => null, 'actions' => ['view', 'create', 'edit', 'delete']],
+        'locations'      => ['group' => 'logistics', 'bn' => 'লোকেশন',            'en' => 'Locations',          'icon' => 'bi-geo-alt',               'url' => 'admin/locations', 'actions' => ['view', 'create', 'edit', 'delete']],
 
-        'payments'       => ['group' => 'finance',   'bn' => 'পেমেন্ট',            'en' => 'Payments',           'icon' => 'bi-credit-card',           'url' => null, 'actions' => ['view', 'edit', 'export']],
+        'payments'       => ['group' => 'finance',   'bn' => 'পেমেন্ট',            'en' => 'Payments',           'icon' => 'bi-credit-card',           'url' => 'admin/payments', 'actions' => ['view', 'edit', 'export']],
         'refunds'        => ['group' => 'finance',   'bn' => 'রিফান্ড',            'en' => 'Refunds',            'icon' => 'bi-arrow-counterclockwise','url' => 'admin/refunds', 'actions' => ['view', 'approve']],
         'reports'        => ['group' => 'finance',   'bn' => 'রিপোর্ট',            'en' => 'Reports',            'icon' => 'bi-graph-up',              'url' => 'admin/reports', 'actions' => ['view', 'export']],
         'accounting'     => ['group' => 'finance',   'bn' => 'হিসাবরক্ষণ',          'en' => 'Accounting',         'icon' => 'bi-journal-bookmark',      'url' => 'admin/accounting', 'actions' => ['view', 'create', 'edit', 'delete', 'export', 'configure']],
 
         'banners'        => ['group' => 'content',   'bn' => 'ব্যানার',            'en' => 'Banners',            'icon' => 'bi-images',                'url' => 'admin/banners', 'actions' => ['view', 'create', 'edit', 'delete']],
+        'page_builder'   => ['group' => 'content',   'bn' => 'পেজ বিল্ডার (সেকশন)',  'en' => 'Page Builder',       'icon' => 'bi-grid-1x2',              'url' => 'admin/page-builder', 'actions' => ['view', 'create', 'edit', 'delete']],
+        'appearance'     => ['group' => 'content',   'bn' => 'হেডার, মেনু ও রং',     'en' => 'Header, Menus & Colours', 'icon' => 'bi-palette',          'url' => 'admin/appearance', 'actions' => ['view', 'edit']],
         'pages'          => ['group' => 'content',   'bn' => 'পেজ',               'en' => 'Pages',              'icon' => 'bi-file-earmark-text',     'url' => 'admin/pages', 'actions' => ['view', 'create', 'edit', 'delete']],
 
         'support'        => ['group' => 'support',   'bn' => 'সাপোর্ট টিকেট',       'en' => 'Support Tickets',    'icon' => 'bi-headset',               'url' => 'admin/support', 'actions' => ['view', 'reply', 'assign', 'export']],

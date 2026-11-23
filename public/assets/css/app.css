@@ -319,3 +319,18 @@ body {
     .vr-types { grid-template-columns: 1fr 1fr; }
     .vr-type small { display: none; }
 }
+
+/* ---------- Sidebar: collapsible groups + quick search ---------- */
+.admin-sidebar .sidebar-toggle { display: flex; width: 100%; align-items: center; justify-content: space-between; background: none; border: 0; text-align: left; cursor: pointer; }
+.admin-sidebar .sidebar-toggle i { font-size: 10px; transition: transform .15s; }
+.admin-sidebar .sidebar-group.collapsed .sidebar-toggle i { transform: rotate(-90deg); }
+.admin-sidebar .sidebar-group.collapsed .sidebar-items { display: none; }
+.admin-sidebar .sidebar-group.filtering .sidebar-items { display: block !important; }
+.admin-sidebar [data-side-filter] { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.12); color: #fff; }
+.admin-sidebar [data-side-filter]::placeholder { color: #8fb0ae; }
+
+/* ---------- Logo heart: love red (admin, login pages, invoice) ---------- */
+.brand-text .bi-heart-pulse-fill,
+.inv-brand .bi-heart-pulse-fill { color: #e11d48; }
+/* admin top bar is green: put the red heart on a small white tile, like the shop logo */
+.admin-topbar .navbar-brand .bi-heart-pulse-fill { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; background: #fff; color: #e11d48; font-size: 18px; vertical-align: middle; }

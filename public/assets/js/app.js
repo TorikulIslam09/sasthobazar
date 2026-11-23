@@ -810,3 +810,128 @@
         });
     });
 })();
+
+/* ---------------- Admin sidebar: collapsible groups (remembered) + quick search ---------------- */
+(function () {
+    'use strict';
+    var nav = document.querySelector('[data-side-nav]');
+    if (!nav) { return; }
+    var KEY = 'sb_side_collapsed', saved = {};
+    try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+    var groups = nav.querySelectorAll('[data-side-group]');
+    groups.forEach(function (g) {
+        var name = g.getAttribute('data-side-group'), btn = g.querySelector('[data-side-toggle]');
+        if (!btn) { return; }
+        var collapsed = g.getAttribute('data-active') === '1' ? false : !!saved[name];
+        g.classList.toggle('collapsed', collapsed);
+        btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        btn.addEventListener('click', function () {
+            var now = !g.classList.contains('collapsed');
+            g.classList.toggle('collapsed', now);
+            btn.setAttribute('aria-expanded', now ? 'false' : 'true');
+            saved[name] = now;
+            try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) { /* private mode */ }
+        });
+    });
+    var filter = nav.querySelector('[data-side-filter]');
+    if (filter) {
+        filter.addEventListener('input', function () {
+            var q = filter.value.trim().toLowerCase();
+            groups.forEach(function (g) {
+                var any = false;
+                g.querySelectorAll('[data-side-item]').forEach(function (a) {
+                    var hit = q === '' || a.getAttribute('data-side-item').indexOf(q) !== -1 || a.textContent.toLowerCase().indexOf(q) !== -1;
+                    a.style.display = hit ? '' : 'none';
+                    if (hit) { any = true; }
+                });
+                g.style.display = any ? '' : 'none';
+                g.classList.toggle('filtering', q !== '');
+            });
+        });
+    }
+})();
+
+/* ---------------- Page builder form: repeaters, page -> positions, source-dependent fields ---------------- */
+(function () {
+    'use strict';
+    // repeater rows: add (copy of the last row, emptied) / remove; indexes renumbered so PHP gets a clean list
+    document.querySelectorAll('[data-repeater]').forEach(function (rep) {
+        var list = rep.querySelector('[data-repeater-list]');
+        var renumber = function () {
+            list.querySelectorAll('[data-repeater-item]').forEach(function (item, i) {
+                item.querySelectorAll('[name]').forEach(function (f) { f.name = f.name.replace(/\]\[\d+\]\[/, '][' + i + ']['); });
+            });
+        };
+        rep.querySelector('[data-repeater-add]').addEventListener('click', function () {
+            var items = list.querySelectorAll('[data-repeater-item]');
+            if (items.length >= 30) { return; }
+            var copy = items[items.length - 1].cloneNode(true);
+            copy.querySelectorAll('input, textarea').forEach(function (f) { f.value = ''; });
+            copy.querySelectorAll('select').forEach(function (f) { f.selectedIndex = 0; });
+            list.appendChild(copy);
+            renumber();
+            var first = copy.querySelector('input, textarea');
+            if (first) { first.focus(); }
+        });
+        list.addEventListener('click', function (ev) {
+            var btn = ev.target.closest('[data-repeater-remove]');
+            if (!btn) { return; }
+            var items = list.querySelectorAll('[data-repeater-item]');
+            var item = btn.closest('[data-repeater-item]');
+            if (items.length > 1) { item.remove(); } else { item.querySelectorAll('input, textarea').forEach(function (f) { f.value = ''; }); }
+            renumber();
+        });
+    });
+    // positions available for the chosen page (home has extra positions)
+    var pageSel = document.querySelector('[data-pb-page]'), posSel = document.querySelector('[data-pb-position]');
+    if (pageSel && posSel) {
+        var syncPos = function () {
+            var allowed = (pageSel.selectedOptions[0].getAttribute('data-positions') || '').split(',');
+            Array.prototype.forEach.call(posSel.options, function (o) { o.hidden = allowed.indexOf(o.value) === -1; o.disabled = o.hidden; });
+            if (posSel.selectedOptions[0] && posSel.selectedOptions[0].disabled) { posSel.value = 'bottom'; }
+        };
+        pageSel.addEventListener('change', syncPos);
+        syncPos();
+    }
+    // products section: category / brand / IDs fields only for that source
+    var src = document.querySelector('[data-pb-source]');
+    if (src) {
+        var syncSrc = function () {
+            document.querySelectorAll('[data-pb-when]').forEach(function (box) {
+                box.hidden = box.getAttribute('data-pb-when') !== 'source:' + src.value;
+            });
+        };
+        src.addEventListener('change', syncSrc);
+        syncSrc();
+    }
+})();
+
+/* ---------------- Settings → Watermark: live preview ---------------- */
+(function () {
+    'use strict';
+    var form = document.querySelector('[data-wm-form]'), img = document.querySelector('[data-wm-preview]');
+    if (!form || !img) { return; }
+    var timer = null;
+    var refresh = function () {
+        form.querySelectorAll('[data-wm-out]').forEach(function () {});
+        document.querySelectorAll('[data-wm-out]').forEach(function (b) {
+            var f = document.getElementById(b.getAttribute('data-wm-out'));
+            if (f) { b.textContent = f.value; }
+        });
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            var type = (form.querySelector('input[name=watermark_type]:checked') || {}).value || 'text';
+            var q = new URLSearchParams({
+                type: type,
+                text: form.querySelector('[name=watermark_text]').value,
+                position: form.querySelector('[name=watermark_position]').value,
+                opacity: form.querySelector('[name=watermark_opacity]').value,
+                size: form.querySelector('[name=watermark_size]').value,
+                color: form.querySelector('[name=watermark_color]').value,
+                _: Date.now()
+            });
+            img.src = img.getAttribute('data-src') + '?' + q.toString();
+        }, 300);
+    };
+    form.querySelectorAll('[data-wm]').forEach(function (f) { f.addEventListener('input', refresh); f.addEventListener('change', refresh); });
+})();

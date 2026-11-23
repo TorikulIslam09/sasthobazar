@@ -146,19 +146,38 @@ class AdminProductController extends Controller
 
     public function import(): void
     {
+        @set_time_limit(600); // big catalogues (thousands of rows, photos) take a while
         $options = [
             'dry_run'       => Helpers::str('dry_run') === '1',
             'create_brands' => Helpers::str('create_brands') === '1',
+            'create_categories' => Helpers::str('create_categories') === '1' && can('categories.create'),
             'can_approve'   => can('products.approve'),
             'can_create'    => can('products.create'),
             'can_edit'      => can('products.edit'),
         ];
+        $options['replace_images'] = Helpers::str('replace_images') === '1';
         $files = Upload::files('file');
         $error = null;
         if (!$files) {
             $error = __('import_choose_file');
         } else {
             $error = ProductCsv::validateUpload($files[0]);
+        }
+        // optional ZIP with the photos named in the "images" column
+        $zip = Upload::files('images_zip')[0] ?? null;
+        if (!$error && $zip) {
+            $zipName = mb_substr(basename((string) $zip['name']), 0, 80);
+            if (($zip['error'] ?? 1) !== UPLOAD_ERR_OK || !is_uploaded_file((string) $zip['tmp_name'])) {
+                $error = __('imgimp_zip_upload_failed', ['name' => $zipName, 'mb' => num((int) ini_get('upload_max_filesize'))]);
+            } elseif (strtolower(pathinfo($zipName, PATHINFO_EXTENSION)) !== 'zip') {
+                $error = __('imgimp_bad_zip');
+            } else {
+                [$index, $zipError] = ProductImageImport::zipIndex((string) $zip['tmp_name']);
+                $error = $zipError;
+                $options['zip_index'] = $index;
+                $options['zip_path'] = (string) $zip['tmp_name'];
+                $options['zip_count'] = count($index);
+            }
         }
         if ($error) {
             $this->view('admin/products/import', ['title' => __('import_products'), 'result' => ['fatal' => $error], 'options' => $options], 'admin');
@@ -552,7 +571,9 @@ class AdminProductController extends Controller
         $paths = [];
         try {
             foreach ($files as $f) {
-                $paths[] = Upload::storeImage($f, 'products');
+                $path = Upload::storeImage($f, 'products');
+                $paths[] = $path;
+                Watermark::applyToStored($path); // SasthoBazar watermark (Settings → Watermark); original kept privately
             }
         } catch (Throwable $e) {
             $this->discardFiles($paths);
@@ -565,6 +586,7 @@ class AdminProductController extends Controller
     {
         foreach ($paths as $p) {
             Upload::delete($p);
+            Watermark::forget($p);
         }
     }
 

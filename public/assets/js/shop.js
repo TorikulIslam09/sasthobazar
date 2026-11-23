@@ -399,6 +399,32 @@
         });
     }
 
+    /* ---------------- Reviews section: arrows for the swipe row + "read more" ---------------- */
+    document.querySelectorAll('[data-rv-prev], [data-rv-next]').forEach(function (btn) {
+        var row = document.getElementById(btn.getAttribute('data-rv-prev') || btn.getAttribute('data-rv-next'));
+        if (!row) { return; }
+        var dir = btn.hasAttribute('data-rv-prev') ? -1 : 1;
+        var sync = function () {
+            var max = row.scrollWidth - row.clientWidth - 2;
+            btn.disabled = dir < 0 ? row.scrollLeft <= 2 : row.scrollLeft >= max;
+            btn.hidden = row.scrollWidth <= row.clientWidth + 2;
+        };
+        btn.addEventListener('click', function () {
+            var card = row.querySelector('.sb-rv-card');
+            row.scrollBy({ left: dir * (card ? card.offsetWidth + 12 : 300), behavior: 'smooth' });
+        });
+        row.addEventListener('scroll', sync, { passive: true });
+        window.addEventListener('resize', sync);
+        sync();
+    });
+    document.addEventListener('click', function (ev) {
+        var more = ev.target.closest('[data-rv-more]');
+        if (!more) { return; }
+        var text = more.previousElementSibling;
+        var open = text.classList.toggle('clamp') === false;
+        more.textContent = open ? (document.body.getAttribute('data-lang') === 'bn' ? 'কম দেখুন' : 'Show less') : (document.body.getAttribute('data-lang') === 'bn' ? 'আরও পড়ুন' : 'Read more');
+    });
+
     /* ---------------- Promotional popup (once a day) ---------------- */
     var popup = document.getElementById('sbPopup');
     if (popup) {

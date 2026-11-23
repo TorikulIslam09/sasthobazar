@@ -1,9 +1,11 @@
 <?php /** Static page. Vars: $page, $heading, $content (clean HTML), $siblings */ ?>
 <nav class="sb-crumbs"><a href="<?= e(url('/')) ?>"><?= e(__('home')) ?></a> › <span><?= e($heading) ?></span></nav>
+<?php $hasText = trim(strip_tags($content)) !== ''; $built = Section::hasAny('page:' . $page['slug']); ?>
+<?php if (!$hasText && $built): return; /* page made only with Page Builder sections: they are rendered by the layout */ endif; ?>
 <div class="sb-page-wrap">
     <article class="sb-block">
         <h1 class="h4 mb-3"><?= e($heading) ?></h1>
-        <?php if (trim(strip_tags($content)) !== ''): ?>
+        <?php if ($hasText): ?>
             <div class="sb-prose"><?= $content ?></div>
         <?php else: ?>
             <p class="text-muted"><?= e(__('page_coming_soon')) ?></p>

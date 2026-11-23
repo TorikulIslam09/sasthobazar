@@ -19,13 +19,28 @@ $opt = static fn(string $k) => !empty($options[$k]) ? 'checked' : '';
         <div class="alert alert-info">
             <i class="bi bi-clipboard-check"></i> <strong><?= e(__('import_dry_ok')) ?></strong>
             <div class="small"><?= e(__('import_would', ['c' => num($result['created']), 'u' => num($result['updated'])])) ?>
-                <?php if ($result['brands_created']): ?> · <?= e(__('import_new_brands', ['list' => implode(', ', $result['brands_created'])])) ?><?php endif; ?></div>
+                <?php if ($result['brands_created']): ?> · <?= e(__('import_new_brands', ['list' => implode(', ', $result['brands_created'])])) ?><?php endif; ?>
+                <?php if (!empty($result['images_found'])): ?> · <?= e(__('imgimp_dry_found', ['n' => num($result['images_found'])])) ?><?php endif; ?>
+                <?php if (!empty($result['categories_created'])): ?><div class="mt-1"><?= e(__('import_new_categories', ['n' => num(count($result['categories_created'])), 'list' => implode(', ', array_slice($result['categories_created'], 0, 15)) . (count($result['categories_created']) > 15 ? ' …' : '')])) ?></div><?php endif; ?></div>
         </div>
     <?php else: ?>
         <div class="alert alert-success">
             <i class="bi bi-check-circle"></i> <strong><?= e(__('import_done', ['c' => num($result['created']), 'u' => num($result['updated'])])) ?></strong>
             <?php if ($result['brands_created']): ?><div class="small"><?= e(__('import_new_brands', ['list' => implode(', ', $result['brands_created'])])) ?></div><?php endif; ?>
+            <?php if (!empty($result['categories_created'])): ?><div class="small"><i class="bi bi-diagram-3"></i> <?= e(__('import_new_categories', ['n' => num(count($result['categories_created'])), 'list' => implode(', ', array_slice($result['categories_created'], 0, 15)) . (count($result['categories_created']) > 15 ? ' …' : '')])) ?></div><?php endif; ?>
+            <?php if (!empty($result['images_found'])): ?><div class="small"><i class="bi bi-images"></i> <?= e(__('imgimp_done', ['n' => num($result['images_added']), 'total' => num($result['images_found'])])) ?><?= Watermark::enabled() ? ' · ' . e(__('imgimp_watermarked')) : '' ?></div><?php endif; ?>
             <div class="mt-1"><a href="<?= e(url('admin/products?sort=updated')) ?>" class="alert-link"><?= e(__('view_products')) ?> →</a></div>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($result['image_warnings'])): ?>
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white fw-semibold text-warning-emphasis"><i class="bi bi-image"></i> <?= e(__('imgimp_problems')) ?></div>
+            <div class="table-responsive" style="max-height: 300px">
+                <table class="table table-sm mb-0 small"><tbody>
+                    <?php foreach ($result['image_warnings'] as $w): ?><tr><td style="width:80px"><?= e(num($w['line'])) ?></td><td><?= e($w['message']) ?></td></tr><?php endforeach; ?>
+                </tbody></table>
+            </div>
         </div>
     <?php endif; ?>
 
@@ -63,6 +78,19 @@ $opt = static fn(string $k) => !empty($options[$k]) ? 'checked' : '';
                 <div class="invalid-feedback" data-csv-error></div>
                 <div class="form-text"><?= e(__('csv_rules', ['mb' => ProductCsv::MAX_BYTES / 1048576, 'n' => num(ProductCsv::MAX_ROWS)])) ?></div>
 
+                <label class="form-label mt-3" for="images_zip"><?= e(__('imgimp_zip')) ?></label>
+                <input class="form-control" type="file" id="images_zip" name="images_zip" accept=".zip,application/zip">
+                <div class="form-text"><?= e(__('imgimp_zip_help', ['mb' => num((int) ini_get('upload_max_filesize'))])) ?></div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="replace_images" name="replace_images" value="1" <?= $opt('replace_images') ?>>
+                    <label class="form-check-label" for="replace_images"><?= e(__('imgimp_replace')) ?></label>
+                </div>
+                <?php if (!Watermark::enabled()): ?>
+                    <div class="form-text"><i class="bi bi-droplet-half"></i> <?= e(__('imgimp_wm_off')) ?> <?php if (can('settings.view')): ?><a href="<?= e(url('admin/settings/watermark')) ?>"><?= e(__('set_watermark')) ?></a><?php endif; ?></div>
+                <?php else: ?>
+                    <div class="form-text text-success"><i class="bi bi-droplet-half"></i> <?= e(__('imgimp_wm_on')) ?></div>
+                <?php endif; ?>
+
                 <div class="form-check mt-3">
                     <input class="form-check-input" type="checkbox" id="dry_run" name="dry_run" value="1" <?= $result === null ? 'checked' : $opt('dry_run') ?>>
                     <label class="form-check-label" for="dry_run"><?= e(__('import_dry_run')) ?></label>
@@ -72,6 +100,13 @@ $opt = static fn(string $k) => !empty($options[$k]) ? 'checked' : '';
                     <input class="form-check-input" type="checkbox" id="create_brands" name="create_brands" value="1" <?= $opt('create_brands') ?>>
                     <label class="form-check-label" for="create_brands"><?= e(__('import_create_brands')) ?></label>
                 </div>
+                <?php if (can('categories.create')): ?>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="create_categories" name="create_categories" value="1" <?= $opt('create_categories') ?>>
+                    <label class="form-check-label" for="create_categories"><?= e(__('import_create_categories')) ?></label>
+                    <div class="form-text mt-0"><?= e(__('import_create_categories_help')) ?></div>
+                </div>
+                <?php endif; ?>
             </div>
             <div class="card-footer bg-white d-flex flex-wrap gap-2">
                 <button class="btn btn-brand"><i class="bi bi-upload"></i> <?= e(__('import_start')) ?></button>
@@ -98,6 +133,13 @@ $opt = static fn(string $k) => !empty($options[$k]) ? 'checked' : '';
                     <?php endforeach; ?>
                 </div>
                 <div class="form-text"><?= e(__('import_required_cols')) ?></div>
+                <div class="fw-semibold mt-3 mb-1"><i class="bi bi-images"></i> <?= e(__('imgimp_how')) ?></div>
+                <ul class="ps-3 mb-0">
+                    <li><?= e(__('imgimp_how_1')) ?> <code>NAPA-500.jpg|NAPA-500-back.jpg</code></li>
+                    <li><?= e(__('imgimp_how_2')) ?></li>
+                    <li><?= e(__('imgimp_how_3')) ?></li>
+                    <li><?= e(__('imgimp_how_4')) ?></li>
+                </ul>
             </div>
         </div>
     </div>

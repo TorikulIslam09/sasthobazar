@@ -35,6 +35,16 @@ final class Order
         'failed'              => [],
     ];
     public const CUSTOMER_CANCELLABLE = ['pending', 'prescription_review'];
+    /** Settings → Orders "customers can cancel until": pending (not confirmed yet) | confirmed | processing (not packed yet) */
+    public const CANCEL_UNTIL = ['pending' => ['pending', 'prescription_review'], 'confirmed' => ['pending', 'prescription_review', 'confirmed'],
+                                 'processing' => ['pending', 'prescription_review', 'confirmed', 'processing']];
+
+    /** May the customer cancel this order themselves (from My orders)? */
+    public static function customerCanCancel(array $o): bool
+    {
+        $until = (string) setting('customer_cancel_until', 'confirmed');
+        return in_array($o['status'], self::CANCEL_UNTIL[$until] ?? self::CUSTOMER_CANCELLABLE, true);
+    }
     public const PAYMENT_METHODS = ['cod', 'bkash', 'nagad', 'rocket'];
     public const MANUAL_METHODS = ['bkash', 'nagad', 'rocket'];
     public const REFUND_METHODS = ['bkash', 'nagad', 'bank', 'cash'];

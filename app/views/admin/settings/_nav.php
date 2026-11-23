@@ -4,6 +4,7 @@ $tabs = [
     'general'       => ['admin/settings/general', 'bi-shop-window', __('set_general'), 'settings.view'],
     'orders'        => ['admin/settings/orders', 'bi-credit-card', __('set_orders_payments'), 'settings.view'],
     'checkout'      => ['admin/settings/checkout', 'bi-bag-check', __('set_checkout'), 'settings.view'],
+    'watermark'     => ['admin/settings/watermark', 'bi-droplet-half', __('set_watermark'), 'settings.view'],
     'sms'           => ['admin/settings/sms', 'bi-chat-dots', __('set_sms'), 'settings.view'],
     'email'         => ['admin/settings/email', 'bi-envelope', __('set_email'), 'settings.view'],
     'notifications' => ['admin/settings/notifications', 'bi-bell', __('set_notifications'), 'settings.view'],

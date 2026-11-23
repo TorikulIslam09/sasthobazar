@@ -140,6 +140,62 @@ final class Upload
         }
     }
 
+    /**
+     * Same checks as validateImage() for a file that did NOT come from a browser upload
+     * (photo inside an import ZIP, or downloaded from a link). $name is only used in messages.
+     */
+    public static function validateImageFile(string $path, string $name, ?int $maxBytes = null): ?string
+    {
+        $maxBytes ??= self::maxBytes();
+        $name = mb_substr(basename($name), 0, 80);
+        $size = is_file($path) ? (int) filesize($path) : 0;
+        if ($size <= 0) {
+            return __('upload_failed', ['name' => $name]);
+        }
+        if ($size > $maxBytes) {
+            return __('upload_too_large', ['name' => $name, 'mb' => round($maxBytes / 1048576, 1)]);
+        }
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($path) ?: '';
+        if (!isset(self::IMAGE_TYPES[$mime])) {
+            return __('upload_bad_type', ['name' => $name]);
+        }
+        $info = @getimagesize($path);
+        if ($info === false || ($info['mime'] ?? '') !== $mime || $info[0] < 1 || $info[1] < 1) {
+            return __('upload_bad_type', ['name' => $name]);
+        }
+        if ($info[0] > self::MAX_DIMENSION || $info[1] > self::MAX_DIMENSION) {
+            return __('upload_too_big_dim', ['name' => $name, 'px' => self::MAX_DIMENSION]);
+        }
+        if (preg_match('/<\?(php|=)|<script/i', (string) file_get_contents($path))) {
+            return __('upload_bad_type', ['name' => $name]);
+        }
+        return null;
+    }
+
+    /** Copy an already-validated local image file into public/uploads/{dir}/{Y}/{m}/ (random name). */
+    public static function storeImageFile(string $path, string $dir): string
+    {
+        if (!preg_match('/^[a-z0-9_-]+$/', $dir)) {
+            throw new InvalidArgumentException('Invalid upload dir');
+        }
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($path) ?: '';
+        $ext = self::IMAGE_TYPES[$mime] ?? null;
+        if ($ext === null) {
+            throw new RuntimeException('Unsupported image type');
+        }
+        $rel = 'uploads/' . $dir . '/' . date('Y') . '/' . date('m');
+        $abs = ROOT_PATH . '/public/' . $rel;
+        if (!is_dir($abs) && !mkdir($abs, 0775, true) && !is_dir($abs)) {
+            throw new RuntimeException('Cannot create upload directory');
+        }
+        $file = bin2hex(random_bytes(16)) . '.' . $ext;
+        if (!copy($path, $abs . '/' . $file)) {
+            throw new RuntimeException('Cannot store image');
+        }
+        @chmod($abs . '/' . $file, 0644);
+        return $rel . '/' . $file;
+    }
+
     /** True if the request body was dropped because it exceeded post_max_size. */
     public static function postTooLarge(): bool
     {

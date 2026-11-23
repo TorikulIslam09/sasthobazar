@@ -142,7 +142,7 @@ if (!headers_sent()) {
     // Scripts / styles only from this site and the two CDNs the pages use. Inline scripts are still needed by a few pages.
     header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
         . "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; "
-        . "img-src 'self' data: https:; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'");
+        . "img-src 'self' data: https:; connect-src 'self'; frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'");
     if (IS_HTTPS) {
         header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
     }

@@ -5,6 +5,8 @@
 $err = static fn(string $f) => isset($errors[$f]) ? '<div class="invalid-feedback d-block">' . e($errors[$f]) . '</div>' : '';
 $openReturn = array_filter($refunds, static fn($r) => $r['status'] === 'requested');
 $canReturn = Order::returnable($o) && !$openReturn;
+$canCancel = Order::customerCanCancel($o);
+$open = !in_array($o['status'], ['delivered', 'cancelled', 'returned', 'failed'], true);
 $returnable = array_filter($items, static fn($it) => $it['status'] === 'active' && (int) $it['quantity'] > (int) $it['returned_qty']);
 ?>
 <nav class="sb-crumbs"><a href="<?= e(url('account')) ?>"><?= e(__('my_account')) ?></a> › <a href="<?= e(url('account/orders')) ?>"><?= e(__('my_orders')) ?></a> › <span>#<?= e($o['order_no']) ?></span></nav>
@@ -30,8 +32,12 @@ $returnable = array_filter($items, static fn($it) => $it['status'] === 'active' 
                 <div class="d-flex gap-2 align-items-center">
                     <?= OrderView::badge($o['status']) ?>
                     <a class="btn btn-outline-secondary btn-sm" href="<?= e(url('account/orders/' . $o['order_no'] . '/invoice')) ?>" target="_blank" rel="noopener"><i class="bi bi-printer"></i> <?= e(__('invoice')) ?></a>
+                    <?php if ($canCancel): ?><a class="btn btn-outline-danger btn-sm" href="#cancel"><i class="bi bi-x-circle"></i> <?= e(__('cancel_order')) ?></a><?php endif; ?>
                 </div>
             </div>
+            <?php if ($open && !$canCancel): ?>
+                <p class="small text-muted mb-2"><i class="bi bi-info-circle"></i> <?= e(__('cancel_too_late')) ?> <a href="<?= e(url('account/support/new?order=' . rawurlencode($o['order_no']))) ?>"><?= e(__('cancel_ask_support')) ?></a></p>
+            <?php endif; ?>
             <?= View::partial('orders/_timeline', ['timeline' => $timeline]) ?>
             <?php foreach ($splits as $sp): if (!$sp['tracking_no'] || count($splits) > 1) { continue; }
                 $turl = $sp['tracking_url_template'] ? str_replace('{tracking_no}', rawurlencode((string) $sp['tracking_no']), (string) $sp['tracking_url_template']) : null; ?>
@@ -114,8 +120,9 @@ $returnable = array_filter($items, static fn($it) => $it['status'] === 'active' 
             </div>
         </div>
 
-        <?php if (in_array($o['status'], Order::CUSTOMER_CANCELLABLE, true)): ?>
-            <section class="sb-block mt-3">
+        <?php if ($canCancel): ?>
+            <section class="sb-block mt-3" id="cancel">
+                <h2 class="h6 fw-bold text-danger"><i class="bi bi-x-circle"></i> <?= e(__('cancel_order')) ?></h2>
                 <form method="post" action="<?= e(url('account/orders/' . $o['order_no'] . '/cancel')) ?>" class="d-flex flex-wrap gap-2 align-items-end"
                       data-confirm="<?= e(__('cancel_confirm')) ?>" data-confirm-danger="1">
                     <?= csrf_field() ?>

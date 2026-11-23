@@ -33,8 +33,8 @@ $canEdit = can('couriers.edit');
                     <div class="col-md-6"><label class="form-label mb-0" for="p<?= (int) $c['id'] ?>"><?= e(__('phone')) ?></label><input class="form-control form-control-sm" id="p<?= (int) $c['id'] ?>" name="phone" value="<?= e($c['phone']) ?>" maxlength="20" <?= $canEdit ? '' : 'disabled' ?>></div>
                     <?php if ($c['code'] !== 'self'): ?>
                         <div class="col-12"><label class="form-label mb-0" for="u<?= (int) $c['id'] ?>"><?= e(__('api_base_url')) ?></label><input class="form-control form-control-sm" id="u<?= (int) $c['id'] ?>" name="api_base_url" value="<?= e($c['api_base_url']) ?>" maxlength="255" <?= $canEdit ? '' : 'disabled' ?>></div>
-                        <div class="col-md-6"><label class="form-label mb-0" for="k<?= (int) $c['id'] ?>"><?= e(__('api_key')) ?></label><input class="form-control form-control-sm" id="k<?= (int) $c['id'] ?>" name="api_key" type="password" autocomplete="off" placeholder="<?= $c['api_key'] ? '•••••• (' . e(__('saved')) . ')' : '' ?>" <?= $canEdit ? '' : 'disabled' ?>></div>
-                        <div class="col-md-6"><label class="form-label mb-0" for="s<?= (int) $c['id'] ?>"><?= e(__('api_secret')) ?></label><input class="form-control form-control-sm" id="s<?= (int) $c['id'] ?>" name="api_secret" type="password" autocomplete="off" placeholder="<?= $c['api_secret'] ? '•••••• (' . e(__('saved')) . ')' : '' ?>" <?= $canEdit ? '' : 'disabled' ?>></div>
+                        <?php if ($c['code'] !== 'pathao'): ?><div class="col-md-6"><label class="form-label mb-0" for="k<?= (int) $c['id'] ?>"><?= e(__('api_key')) ?></label><input class="form-control form-control-sm" id="k<?= (int) $c['id'] ?>" name="api_key" type="password" autocomplete="off" placeholder="<?= $c['api_key'] ? '•••••• (' . e(__('saved')) . ')' : '' ?>" <?= $canEdit ? '' : 'disabled' ?>></div><?php endif; ?>
+                        <div class="col-md-6"><label class="form-label mb-0" for="s<?= (int) $c['id'] ?>"><?= e(__($c['code'] === 'pathao' ? 'cfg_client_secret' : 'api_secret')) ?></label><input class="form-control form-control-sm" id="s<?= (int) $c['id'] ?>" name="api_secret" type="password" autocomplete="off" placeholder="<?= $c['api_secret'] ? '•••••• (' . e(__('saved')) . ')' : '' ?>" <?= $canEdit ? '' : 'disabled' ?>></div>
                         <?php foreach (AdminCourierController::FIELDS[$c['code']] ?? [] as $f): $secret = $f === 'password'; ?>
                             <div class="col-md-6"><label class="form-label mb-0" for="f<?= (int) $c['id'] . $f ?>"><?= e(__('cfg_' . $f)) ?></label>
                                 <input class="form-control form-control-sm" id="f<?= (int) $c['id'] . $f ?>" name="cfg_<?= e($f) ?>" <?= $secret ? 'type="password" autocomplete="off" placeholder="' . (!empty($cfg[$f]) ? '•••••• (' . e(__('saved')) . ')' : '') . '"' : 'value="' . e($cfg[$f] ?? '') . '"' ?> maxlength="190" <?= $canEdit ? '' : 'disabled' ?>></div>
@@ -55,7 +55,31 @@ $canEdit = can('couriers.edit');
                         <div class="form-check"><input class="form-check-input" type="checkbox" name="regen_token" value="1" id="r<?= (int) $c['id'] ?>" <?= $canEdit ? '' : 'disabled' ?>><label class="form-check-label" for="r<?= (int) $c['id'] ?>"><?= e(__('regen_webhook')) ?></label></div>
                     </div>
                 </div>
-                <?php if ($canEdit): ?><div class="card-footer bg-white"><button class="btn btn-brand btn-sm"><?= e(__('save')) ?></button></div><?php endif; ?>
+                <?php if ($c['code'] === 'pathao'): ?>
+                    <div class="card-body small pt-0">
+                        <div class="alert alert-light border mb-2 py-2">
+                            <b><i class="bi bi-info-circle"></i> <?= e(__('pathao_setup_title')) ?></b>
+                            <ol class="mb-0 ps-3 mt-1">
+                                <li><?= e(__('pathao_setup_1')) ?></li>
+                                <li><?= e(__('pathao_setup_2')) ?></li>
+                                <li><?= e(__('pathao_setup_3')) ?></li>
+                                <li><?= e(__('pathao_setup_4')) ?></li>
+                                <li><?= e(__('pathao_setup_5')) ?></li>
+                            </ol>
+                        </div>
+                        <?php if (!empty($_SESSION['pathao_stores'])): ?>
+                            <div class="border rounded p-2 mb-2"><b><?= e(__('pathao_your_stores')) ?></b>
+                                <?php foreach ($_SESSION['pathao_stores'] as $stx): ?>
+                                    <div class="d-flex justify-content-between gap-2 border-top pt-1 mt-1"><span><?= e($stx['name']) ?> <span class="text-muted"><?= e($stx['address']) ?></span></span><code class="user-select-all"><?= e($stx['id']) ?></code></div>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php unset($_SESSION['pathao_stores']); ?>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+                <?php if ($canEdit): ?><div class="card-footer bg-white d-flex flex-wrap gap-2"><button class="btn btn-brand btn-sm"><?= e(__('save')) ?></button>
+                    <?php if ($c['code'] === 'pathao'): ?><button class="btn btn-outline-secondary btn-sm" formaction="<?= e(url('admin/couriers/' . (int) $c['id'] . '/test')) ?>" formnovalidate><i class="bi bi-plug"></i> <?= e(__('pathao_test_btn')) ?></button><?php endif; ?>
+                </div><?php endif; ?>
             </form>
         </div>
     <?php endforeach; ?>

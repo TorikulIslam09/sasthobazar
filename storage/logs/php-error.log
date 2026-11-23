@@ -56,3 +56,110 @@ Stack trace:
 [21-Nov-2026 08:44:30 Asia/Dhaka] PHP Warning:  preg_match(): Unknown modifier ']' in C:\xampp\htdocs\shasthobazar\app\controllers\AdminBannerController.php on line 126
 [21-Nov-2026 08:44:38 Asia/Dhaka] PHP Warning:  preg_match(): Unknown modifier ']' in C:\xampp\htdocs\shasthobazar\app\controllers\AdminBannerController.php on line 126
 [21-Nov-2026 14:28:18 Asia/Dhaka] [2026-11-21 14:28:18] PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'quantity_remaining' in 'field list' in C:\xampp\htdocs\shasthobazar\core\Database.php:47
+[21-Nov-2026 18:32:26 Asia/Dhaka] [2026-11-21 18:32:26] PDOException: SQLSTATE[HY093]: Invalid parameter number in C:\xampp\htdocs\shasthobazar\core\Database.php:58
+[21-Nov-2026 18:32:26 Asia/Dhaka] [2026-11-21 18:32:26] PDOException: SQLSTATE[HY093]: Invalid parameter number in C:\xampp\htdocs\shasthobazar\core\Database.php:58
+[21-Nov-2026 18:59:43 Asia/Dhaka] [section 2] Cannot use object of type Closure as array
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "items" in C:\xampp\htdocs\shasthobazar\app\views\sections\products.php on line 3
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\shasthobazar\app\views\sections\products.php on line 3
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "title" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 11
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "comment" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 12
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "customer" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 14
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "is_verified_purchase" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 15
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "slug" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "name_bn" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "name_en" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "title" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 11
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "comment" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 12
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "customer" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 14
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "is_verified_purchase" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 15
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "slug" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "name_bn" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "name_en" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "title" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 11
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "comment" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 12
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "customer" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 14
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "is_verified_purchase" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 15
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "slug" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "name_bn" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "name_en" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:43 Asia/Dhaka] [section 1] Cannot use object of type Closure as array
+[21-Nov-2026 18:59:43 Asia/Dhaka] PHP Warning:  Undefined array key "embed" in C:\xampp\htdocs\shasthobazar\app\views\sections\video.php on line 3
+[21-Nov-2026 18:59:44 Asia/Dhaka] [section 2] Cannot use object of type Closure as array
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "items" in C:\xampp\htdocs\shasthobazar\app\views\sections\products.php on line 3
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  foreach() argument must be of type array|object, null given in C:\xampp\htdocs\shasthobazar\app\views\sections\products.php on line 3
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "title" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 11
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "comment" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 12
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "customer" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 14
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "is_verified_purchase" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 15
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "slug" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "name_bn" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "name_en" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "title" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 11
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "comment" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 12
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "customer" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 14
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "is_verified_purchase" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 15
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "slug" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "name_bn" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "name_en" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "title" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 11
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "comment" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 12
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "customer" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 14
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "is_verified_purchase" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 15
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "slug" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "name_bn" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:44 Asia/Dhaka] PHP Warning:  Undefined array key "name_en" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:44 Asia/Dhaka] [section 1] Cannot use object of type Closure as array
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "title" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 11
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "comment" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 12
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "customer" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 14
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "is_verified_purchase" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 15
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "slug" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "name_bn" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "name_en" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "title" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 11
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "comment" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 12
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "customer" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 14
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "is_verified_purchase" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 15
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "slug" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "name_bn" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "name_en" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "rating" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 10
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "title" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 11
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "comment" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 12
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "customer" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 14
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "is_verified_purchase" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 15
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "slug" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "name_bn" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "name_en" in C:\xampp\htdocs\shasthobazar\app\views\sections\reviews.php on line 16
+[21-Nov-2026 18:59:53 Asia/Dhaka] PHP Warning:  Undefined array key "embed" in C:\xampp\htdocs\shasthobazar\app\views\sections\video.php on line 3
+[21-Nov-2026 20:28:42 Asia/Dhaka] [courier webhook] pathao: unknown parcel NOPE123
+[23-Nov-2026 20:33:00 Asia/Dhaka] [2026-11-23 20:33:00] PDOException: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in C:\xampp\htdocs\shasthobazar\core\Database.php:21
+[23-Nov-2026 20:33:48 Asia/Dhaka] [2026-11-23 20:33:48] PDOException: SQLSTATE[HY000]: General error: 2006 MySQL server has gone away in C:\xampp\htdocs\shasthobazar\core\Database.php:47
+[23-Nov-2026 21:46:51 Asia/Dhaka] PHP Warning:  Undefined array key 1 in Command line code on line 3
+[23-Nov-2026 21:46:51 Asia/Dhaka] PHP Warning:  imagejpeg(/wm_src.jpg): Failed to open stream: Permission denied in Command line code on line 7

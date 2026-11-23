@@ -235,6 +235,36 @@ final class Helpers
         return $text;
     }
 
+    /** "just now", "5 minutes ago", "3 days ago" ... (older than ~11 months: the date). */
+    public static function ago(?string $datetime): string
+    {
+        $t = $datetime ? strtotime($datetime) : false;
+        if (!$t) {
+            return '';
+        }
+        $d = time() - $t;
+        if ($d < 60) {
+            return self::trans('ago_now');
+        }
+        foreach ([['minute', 60, 3600], ['hour', 3600, 86400], ['day', 86400, 2592000], ['month', 2592000, 31104000]] as [$unit, $size, $limit]) {
+            if ($d < $limit) {
+                return self::trans('ago_' . $unit, ['n' => self::num((int) floor($d / $size))]);
+            }
+        }
+        return self::dt($datetime, 'd M Y');
+    }
+
+    /** A translation in a given language (bn|en), whatever the current language is (admin forms show both defaults). */
+    public static function transIn(string $key, string $lang): string
+    {
+        $lang = $lang === 'en' ? 'en' : 'bn';
+        if (!isset(self::$lang[$lang])) {
+            $file = APP_PATH . '/lang/' . $lang . '.php';
+            self::$lang[$lang] = is_file($file) ? require $file : [];
+        }
+        return (string) (self::$lang[$lang][$key] ?? $key);
+    }
+
     /** Pick Bangla or English value: tr('ওষুধ', 'Medicine') */
     public static function tr(?string $bn, ?string $en): string
     {

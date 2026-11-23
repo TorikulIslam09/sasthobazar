@@ -142,6 +142,7 @@ class AdminSettingController extends Controller
         'rocket_account_type'  => ['string', 'payment'],
         'min_order_amount'     => ['decimal', 'order'],
         'return_window_days'   => ['int', 'order'],
+        'customer_cancel_until' => ['string', 'order'],
         'order_prefix'         => ['string', 'order'],
         'default_commission_rate' => ['decimal', 'vendor'],
         'payout_min_amount'    => ['decimal', 'vendor'],
@@ -157,6 +158,7 @@ class AdminSettingController extends Controller
         foreach (self::FIELDS as $k => [$type]) {
             $values[$k] = setting($k, $type === 'bool' ? false : '');
         }
+        $values['customer_cancel_until'] = isset(Order::CANCEL_UNTIL[(string) $values['customer_cancel_until']]) ? $values['customer_cancel_until'] : 'confirmed';
         $old = $_SESSION['_old'] ?? null;
         $this->view('admin/settings/orders', [
             'title'  => __('settings'),
@@ -182,6 +184,9 @@ class AdminSettingController extends Controller
             'nagad_number'       => 'phone',
             'rocket_number'      => 'max:20',
         ]);
+        if (!isset(Order::CANCEL_UNTIL[$in['customer_cancel_until'] ?? ''])) {
+            $in['customer_cancel_until'] = 'confirmed';
+        }
         if (!isset($errors['order_prefix']) && !preg_match('/^[A-Z0-9]{1,6}$/', strtoupper($in['order_prefix'] ?? ''))) {
             $errors['order_prefix'] = __('v_in');
         }

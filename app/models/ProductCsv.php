@@ -21,7 +21,7 @@ final class ProductCsv
         'id', 'sku', 'barcode', 'name_en', 'name_bn', 'product_type', 'generic_name', 'strength', 'dosage_form', 'pack_size',
         'unit', 'category', 'brand', 'vendor', 'price', 'sale_price', 'purchase_price', 'vat_percent', 'requires_prescription',
         'status', 'is_featured', 'min_order_qty', 'max_order_qty', 'short_description', 'description', 'indications',
-        'usage_instructions', 'side_effects', 'slug', 'meta_title', 'meta_description', 'meta_keywords',
+        'usage_instructions', 'side_effects', 'slug', 'meta_title', 'meta_description', 'meta_keywords', 'images',
     ];
 
     /** Alternative header names people commonly use */
@@ -32,7 +32,26 @@ final class ProductCsv
         'prescription_required' => 'requires_prescription', 'rx_required' => 'requires_prescription',
         'category_slug' => 'category', 'brand_slug' => 'brand', 'company' => 'brand', 'manufacturer' => 'brand',
         'vendor_slug' => 'vendor', 'featured' => 'is_featured', 'usage' => 'usage_instructions', 'dosage' => 'usage_instructions',
+        'image' => 'images', 'image_url' => 'images', 'image_urls' => 'images', 'photo' => 'images', 'photos' => 'images', 'picture' => 'images',
+        'image_filename' => 'images', 'image_filenames' => 'images', 'image_file' => 'images',
+        'product_id' => 'id', 'brand_name' => 'brand', 'vendor_id' => 'vendor', 'category_name' => 'category',
+        'full_description' => 'description', 'long_description' => 'description',
+        'active_ingredients' => 'generic_name', 'active_ingredient' => 'generic_name',
+        'warnings' => 'side_effects', 'warning' => 'side_effects', 'precautions' => 'side_effects',
+        'storage_instructions' => 'usage_instructions', 'storage' => 'usage_instructions',
+        'parent_category' => 'main_category', 'sub_category' => 'subcategory', 'child_category_name' => 'child_category',
     ];
+
+    /** Category path columns (instead of one "category" column): Main › Sub › Child */
+    private const PATH_COLUMNS = ['main_category', 'subcategory', 'child_category'];
+
+    /** Columns that may come from several source columns: how to combine them */
+    private const MERGE = ['images' => '|', 'brand' => 'first', 'generic_name' => 'first', 'description' => "\n\n",
+                           'side_effects' => "\n", 'usage_instructions' => "\n"];
+
+    /** Columns some catalogue files have that this shop does not import (stock is managed in Inventory) */
+    private const IGNORED = ['origin_country', 'country_of_origin', 'stock_quantity', 'stock_qty', 'stock', 'stock_status',
+                             'image_alt', 'catalog_status', 'source_note', 'notes', 'note'];
 
     /** Plain text columns => max length */
     private const TEXT = [
@@ -47,6 +66,10 @@ final class ProductCsv
 
     private array $errors = [];
     private array $warnings = [];
+    /** soft fixes counted once for a summary (instead of one message per row) */
+    private array $fixes = ['no_price' => 0, 'type_guessed' => 0, 'slug_renamed' => 0];
+    /** categories to create: path key => ['name' => ..., 'parent' => parent path key | null, 'parent_id' => id | null] */
+    private array $newCategories = [];
 
     /* ================= Export ================= */
 
@@ -60,6 +83,7 @@ final class ProductCsv
             $p['vat_percent'], $p['requires_prescription'], $p['status'], $p['is_featured'], $p['min_order_qty'],
             $p['max_order_qty'], $p['short_description'], $p['description'], $p['indications'], $p['usage_instructions'] ?? '',
             $p['side_effects'], $p['slug'], $p['meta_title'], $p['meta_description'], $p['meta_keywords'] ?? '',
+            '', // images: empty = keep the current photos when this file is imported again
         ];
     }
 
@@ -74,6 +98,7 @@ final class ProductCsv
                 'price' => '12.00', 'sale_price' => '11.50', 'purchase_price' => '10.00', 'vat_percent' => '0',
                 'requires_prescription' => '0', 'status' => 'draft', 'is_featured' => '0', 'min_order_qty' => '1',
                 'short_description' => 'Fever and pain relief', 'usage_instructions' => '1-2 tablets every 4-6 hours. Max 8 tablets a day.',
+                'images' => 'NAPA-500.jpg|NAPA-500-back.jpg',
             ]),
             array_merge($blank, [
                 'sku' => 'SECLO-20', 'name_en' => 'Seclo 20 mg Capsule', 'product_type' => 'medicine', 'generic_name' => 'Omeprazole',
@@ -115,7 +140,7 @@ final class ProductCsv
     public function import(string $path, array $options): array
     {
         $result = ['fatal' => null, 'errors' => [], 'warnings' => [], 'total' => 0, 'created' => 0, 'updated' => 0,
-                   'dry_run' => !empty($options['dry_run']), 'brands_created' => []];
+                   'dry_run' => !empty($options['dry_run']), 'brands_created' => [], 'images_found' => 0, 'images_added' => 0, 'image_warnings' => []];
 
         [$header, $rows, $fatal] = $this->read($path);
         if ($fatal) {
@@ -136,43 +161,92 @@ final class ProductCsv
         }
 
         $result['total'] = count($rows);
+        if ($this->fixes['no_price']) {
+            $this->warnings[] = __('import_fix_no_price', ['n' => num($this->fixes['no_price'])]);
+        }
+        if ($this->fixes['type_guessed']) {
+            $this->warnings[] = __('import_fix_type', ['n' => num($this->fixes['type_guessed'])]);
+        }
+        if ($this->fixes['slug_renamed']) {
+            $this->warnings[] = __('import_fix_slug', ['n' => num($this->fixes['slug_renamed'])]);
+        }
+        $result['categories_created'] = array_values(array_map(static fn($c) => $c['name'], $this->newCategories));
         $result['warnings'] = $this->warnings;
         $result['errors'] = array_slice($this->errors, 0, self::MAX_REPORTED_ERRORS);
         $result['errors_total'] = count($this->errors);
         $result['created'] = count(array_filter($plan, static fn($o) => $o['mode'] === 'create'));
         $result['updated'] = count(array_filter($plan, static fn($o) => $o['mode'] === 'update'));
         $result['brands_created'] = array_values($newBrands);
+        $result['images_found'] = array_sum(array_map(static fn($o) => count($o['images']), $plan));
 
         if ($this->errors || $result['dry_run'] || !$plan) {
             return $result;
         }
 
         try {
-            Database::getInstance()->transaction(function (Database $db) use ($plan, $newBrands) {
+            $ids = [];
+            $newCategories = $this->newCategories;
+            Database::getInstance()->transaction(function (Database $db) use ($plan, $newBrands, $newCategories, &$ids) {
+                $catIds = [];
+                foreach ($newCategories as $key => $c) { // parents come first (they were planned first)
+                    $parent = $c['parent'] !== null ? ($catIds[$c['parent']] ?? null) : $c['parent_id'];
+                    $catIds[$key] = $db->insert('categories', [
+                        'parent_id' => $parent, 'name_en' => $c['name'], 'slug' => Category::uniqueSlug($c['name']),
+                        'is_active' => 1, 'sort_order' => 100,
+                    ]);
+                }
                 $brandIds = [];
                 foreach ($newBrands as $key => $name) {
                     $brandIds[$key] = $db->insert('brands', [
                         'name' => $name, 'slug' => Brand::uniqueSlug($name), 'is_manufacturer' => 1, 'is_active' => 1,
                     ]);
                 }
-                foreach ($plan as $op) {
+                foreach ($plan as $k => $op) {
                     $data = $op['data'];
                     if (isset($op['new_brand'])) {
                         $data['brand_id'] = $brandIds[$op['new_brand']];
                     }
+                    if (isset($op['new_category'])) {
+                        $data['category_id'] = $catIds[$op['new_category']];
+                    }
                     if ($op['mode'] === 'create') {
                         $data['slug'] ??= Product::uniqueSlug(Product::slugBase($data['name_en'], $data['strength'] ?? null));
                         $data['created_by'] = Auth::id();
-                        $db->insert('products', $data);
-                    } elseif ($data) {
-                        $db->update('products', $data, 'id = :id', ['id' => $op['id']]);
+                        $ids[$k] = $db->insert('products', $data);
+                    } else {
+                        if ($data) {
+                            $db->update('products', $data, 'id = :id', ['id' => $op['id']]);
+                        }
+                        $ids[$k] = (int) $op['id'];
                     }
                 }
             });
+            if ($newCategories) {
+                Category::clearCache();
+            }
         } catch (PDOException $e) {
             error_log('Product import failed: ' . $e->getMessage());
             $result['fatal'] = __('import_db_error') . ($e->getCode() === '23000' ? ' (' . __('duplicate_value') . ')' : '');
             $result['created'] = $result['updated'] = 0;
+        }
+
+        // Photos: after the products are saved (a failed photo never undoes the product import)
+        if (empty($result['fatal']) && !empty($ids)) {
+            @set_time_limit(900);
+            $imp = new ProductImageImport($options['zip_path'] ?? null);
+            foreach ($plan as $k => $op) {
+                if (!$op['images'] || !isset($ids[$k])) {
+                    continue;
+                }
+                $alt = $op['name'] !== '' ? $op['name'] : (string) Database::getInstance()->fetchColumn('SELECT name_en FROM products WHERE id = :id', ['id' => $ids[$k]]);
+                [$n, $warn] = $imp->attach((int) $ids[$k], $op['images'], $alt, !empty($options['replace_images']));
+                $result['images_added'] += $n;
+                foreach ($warn as $w) {
+                    if (count($result['image_warnings']) < self::MAX_REPORTED_ERRORS) {
+                        $result['image_warnings'][] = ['line' => $op['line'], 'message' => $w];
+                    }
+                }
+            }
         }
         return $result;
     }
@@ -204,17 +278,23 @@ final class ProductCsv
             return [[], [], __('import_empty')];
         }
         $header = [];
+        $ignored = [];
         foreach ($rawHeader as $i => $col) {
             $key = strtolower(trim((string) preg_replace('/\s+/', '_', trim((string) $col))));
             $key = self::ALIASES[$key] ?? $key;
-            if (in_array($key, self::COLUMNS, true)) {
-                if (in_array($key, $header, true)) {
+            if (in_array($key, self::COLUMNS, true) || in_array($key, self::PATH_COLUMNS, true)) {
+                if (in_array($key, $header, true) && !isset(self::MERGE[$key])) {
                     return [[], [], __('import_duplicate_column', ['col' => $key])];
                 }
                 $header[$i] = $key;
+            } elseif (in_array($key, self::IGNORED, true)) {
+                $ignored[] = (string) $col;
             } elseif ($key !== '') {
                 $this->warnings[] = __('import_unknown_column', ['col' => mb_substr((string) $col, 0, 50)]);
             }
+        }
+        if (!empty($ignored)) {
+            $this->warnings[] = __('import_ignored_columns', ['list' => implode(', ', array_slice($ignored, 0, 10))]);
         }
         if (!array_intersect(['id', 'sku', 'name_en'], $header)) {
             return [[], [], __('import_missing_columns')];
@@ -238,6 +318,13 @@ final class ProductCsv
                 if (strlen($v) > 1 && $v[0] === "'" && in_array($v[1], ['=', '+', '-', '@'], true)) {
                     $v = substr($v, 1);
                 }
+                // several source columns for one field (e.g. image_url + image_filename, brand_name + manufacturer)
+                if (isset($row[$key]) && $row[$key] !== '' && isset(self::MERGE[$key])) {
+                    if ($v !== '' && self::MERGE[$key] !== 'first') {
+                        $row[$key] .= self::MERGE[$key] . $v;
+                    }
+                    continue;
+                }
                 $row[$key] = $v;
             }
             $rows[] = [$line, $row];
@@ -247,6 +334,68 @@ final class ProductCsv
             return [[], [], __('import_no_rows')];
         }
         return [$header, $rows, null];
+    }
+
+    /** "Home Care", "homecare", "Home-Care" → "homecare" (for matching category names) */
+    private static function norm(string $s): string
+    {
+        return (string) preg_replace('/[^\p{L}\p{N}]+/u', '', mb_strtolower(trim(str_replace('&', 'and', $s))));
+    }
+
+    /**
+     * Main › Sub › Child category names → category id. Each level is looked up by name (or slug) under its parent.
+     * Missing levels are planned for creation when allowed.
+     * @return array{0: ?int, 1: ?string, 2: string} [existing id, path key to create, readable path]
+     */
+    private function resolvePath(array $r, bool $create): array
+    {
+        $names = array_values(array_filter(array_map(static fn($k) => trim((string) ($r[$k] ?? '')), self::PATH_COLUMNS), static fn($v) => $v !== ''));
+        $readable = implode(' › ', $names);
+        $all = Category::allById();
+        $parentId = null;
+        $parentKey = null;
+        $key = '';
+        foreach ($names as $name) {
+            if (mb_strlen($name) > 150) {
+                return [null, null, $readable];
+            }
+            $key .= '/' . self::norm($name);
+            if ($parentKey === null) { // parent exists (or top level): look among its children
+                $found = null;
+                foreach ($all as $c) {
+                    $sameParent = $c['parent_id'] === null ? $parentId === null : (int) $c['parent_id'] === $parentId;
+                    if ($sameParent && (self::norm((string) $c['name_en']) === self::norm($name) || $c['slug'] === mb_strtolower($name)
+                        || ($c['name_bn'] !== null && $c['name_bn'] === $name))) {
+                        $found = $c;
+                        break;
+                    }
+                }
+                if ($found) {
+                    $parentId = (int) $found['id'];
+                    continue;
+                }
+            }
+            if (!$create) {
+                return [null, null, $readable];
+            }
+            $this->newCategories[$key] ??= ['name' => $name, 'parent' => $parentKey, 'parent_id' => $parentKey === null ? $parentId : null];
+            $parentKey = $key;
+        }
+        return $parentKey === null ? [$parentId, null, $readable] : [null, $parentKey, $readable];
+    }
+
+    /** Product type from the category words and the prescription flag. */
+    private static function guessType(array $r): string
+    {
+        $path = mb_strtolower(implode(' ', array_map(static fn($k) => (string) ($r[$k] ?? ''), array_merge(['category'], self::PATH_COLUMNS))));
+        $rx = self::bool((string) ($r['requires_prescription'] ?? '')) === 1;
+        if (preg_match('/device|equipment|electronic|thermomet|monitor|oximet|glucomet|nebuli/u', $path)) {
+            return 'device';
+        }
+        if (preg_match('/medicine|homeopath|herbal|unani|ayurved|veterinar|antibiot|drug|pharma/u', $path)) {
+            return $rx && trim((string) ($r['generic_name'] ?? '')) !== '' ? 'medicine' : 'otc';
+        }
+        return 'general';
     }
 
     private function err(int $line, string $field, string $msg): void
@@ -314,10 +463,23 @@ final class ProductCsv
         }
 
         // ---- required on create ----
+        $finalStatus = $has('status') ? strtolower($r['status']) : ($current['status'] ?? 'draft');
+        $pathGiven = $has('main_category') || $has('subcategory') || $has('child_category');
         if ($mode === 'create') {
-            foreach (['name_en', 'price', 'category'] as $req) {
-                if (!$has($req)) {
-                    $this->err($line, $req, __('v_required'));
+            if (!$has('name_en')) {
+                $this->err($line, 'name_en', __('v_required'));
+            }
+            if (!$has('category') && !$pathGiven) {
+                $this->err($line, 'category', __('v_required'));
+            }
+            if (!$has('price')) {
+                if ($finalStatus === 'draft') {
+                    // catalogue without prices: saved as a hidden draft, price is set before publishing
+                    $data['mrp'] = '0.00';
+                    $data['price'] = '0.00';
+                    $this->fixes['no_price']++;
+                } else {
+                    $this->err($line, 'price', __('import_price_needed_active'));
                 }
             }
         }
@@ -336,8 +498,15 @@ final class ProductCsv
         // ---- enums & flags ----
         if ($has('product_type')) {
             $t = strtolower($r['product_type']);
-            in_array($t, Product::TYPES, true) ? $data['product_type'] = $t
-                : $this->err($line, 'product_type', __('import_allowed', ['list' => implode(', ', Product::TYPES)]));
+            if (in_array($t, Product::TYPES, true)) {
+                $data['product_type'] = $t;
+            } else {
+                // not a type (e.g. the product name): work it out from the category / prescription flag
+                $data['product_type'] = self::guessType($r);
+                $this->fixes['type_guessed']++;
+            }
+        } elseif ($mode === 'create' && $pathGiven) {
+            $data['product_type'] = self::guessType($r);
         }
         if ($has('status')) {
             $s = strtolower($r['status']);
@@ -404,10 +573,13 @@ final class ProductCsv
             $slug = mb_strtolower($r['slug']);
             if (mb_strlen($slug) > 250 || !preg_match('/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u', $slug)) {
                 $this->err($line, 'slug', __('v_slug'));
-            } elseif (isset($seenSlugs[$slug])) {
-                $this->err($line, 'slug', __('import_dup_in_file', ['line' => num($seenSlugs[$slug])]));
-            } elseif (Product::slugExists($slug, $selfId)) {
-                $this->err($line, 'slug', __('slug_taken'));
+            } elseif (isset($seenSlugs[$slug]) || Product::slugExists($slug, $selfId)) {
+                // same web address as another product: a unique one is made automatically (new products)
+                if ($mode === 'create') {
+                    $this->fixes['slug_renamed']++;
+                } else {
+                    $this->err($line, 'slug', __('slug_taken'));
+                }
             } else {
                 $data['slug'] = $slug;
             }
@@ -415,9 +587,19 @@ final class ProductCsv
         }
 
         // ---- relations ----
+        $newCategory = null;
         if ($has('category')) {
             $c = Category::findByRef($r['category']);
             $c ? $data['category_id'] = (int) $c['id'] : $this->err($line, 'category', __('import_not_found', ['value' => $r['category']]));
+        } elseif ($pathGiven) {
+            [$catId, $catKey, $missing] = $this->resolvePath($r, !empty($o['create_categories']));
+            if ($catId !== null) {
+                $data['category_id'] = $catId;
+            } elseif ($catKey !== null) {
+                $newCategory = $catKey; // created when the import is saved
+            } else {
+                $this->err($line, 'category', __('import_cat_missing', ['path' => $missing]));
+            }
         }
         $newBrand = null;
         if ($has('brand')) {
@@ -458,12 +640,23 @@ final class ProductCsv
             $data += ['status' => 'draft', 'unit' => 'pcs', 'product_type' => 'general'];
         }
 
+        $images = [];
+        if ($has('images')) {
+            [$images, $imgErrors] = ProductImageImport::parseCell($r['images'], $o['zip_index'] ?? null);
+            foreach ($imgErrors as $msg) {
+                $this->err($line, 'images', $msg);
+            }
+        }
+
         if (count($this->errors) > $before) {
             return null;
         }
-        $op = ['mode' => $mode, 'id' => $selfId, 'data' => $data];
+        $op = ['mode' => $mode, 'id' => $selfId, 'data' => $data, 'images' => $images, 'line' => $line, 'name' => (string) ($data['name_en'] ?? ($r['name_en'] ?? ''))];
         if ($newBrand !== null) {
             $op['new_brand'] = $newBrand;
+        }
+        if ($newCategory !== null) {
+            $op['new_category'] = $newCategory;
         }
         return $op;
     }
